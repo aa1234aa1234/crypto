@@ -4,6 +4,13 @@
 
 #include "Application.h"
 
+bool Application::isRunning = false;
+
+Application::Application()
+{
+
+}
+
 void Application::run()
 {
     while (isRunning)

@@ -9,8 +9,8 @@
 
 class Application {
 public:
-    static bool isRunning = 0;
-    Application() {};
+    static bool isRunning;
+    Application();
     ~Application() {};
 
     void run();
