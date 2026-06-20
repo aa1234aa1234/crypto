@@ -8,13 +8,10 @@ bool Application::isRunning = false;
 
 Application::Application()
 {
-
+	csvReader.ReadCsv(engine.getCandles(), "../../yea.csv");
 }
 
 void Application::run()
 {
-    while (isRunning)
-    {
-
-    }
+	engine.run();
 }

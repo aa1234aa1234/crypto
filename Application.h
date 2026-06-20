@@ -4,14 +4,17 @@
 
 #ifndef APPLICATION_H
 #define APPLICATION_H
-
-
+#include "Engine.h"
+#include "CsvReader.h"
 
 class Application {
+	CsvReader csvReader;
+	Engine engine;
 public:
     static bool isRunning;
     Application();
-    ~Application() {};
+    ~Application() {
+	};
 
     void run();
 };
