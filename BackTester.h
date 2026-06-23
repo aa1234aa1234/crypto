@@ -13,10 +13,14 @@ public:
 	~BackTester() {}
 
 	void run(std::vector<double>& prices, std::vector<Candle>& candles) {
-		for(int i = 100; i<prices.size() - 1; i++) {
-			int current = wallet;
+		int buys = 0, sells = 0;
+
+		for(int i = 50; i<prices.size() - 1; i++) {
+			std::cout << "date: " << candles[i].date << std::endl;
 			std::cout << "wallet: " << wallet << std::endl;
 			if(wallet <= 0) { std::cout << "out of funds stopping backtesting" << std::endl; return; }
+			double ema50 = indicators::ema(prices, i, 50);
+
 			double sma20 = indicators::sma(prices,i,20);
 			double sma50 = indicators::sma(prices,i,50);
 
@@ -29,18 +33,30 @@ public:
 			if (goldencross && shares == 0) {
         		shares = wallet / prices[i + 1];
         		wallet -= shares * prices[i + 1];
+				buys += 1;
     		}
 
     		if (deathcross && shares > 0) {
         		wallet += shares * prices[i + 1];
         		shares = 0;
+    			sells++;
     		}
 
 			double equity = wallet + shares * prices[i];
-			double profit = ((equity - current) / current) * 100.0;
+			double profit = ((equity - 100000) / 100000) * 100.0;
 			
-			std::cout << "equity: " << equity << 
+			std::cout << "equity: " << equity << std::endl << "profit margin: " << profit << "%" << std::endl;
+			std::cout << std::endl;
 		}
+		std::cout << "trades: " << buys + sells << std::endl << "buys: " << buys << std::endl << "sells: " << sells << std::endl;
+		std::cout << "Final shares: " << shares << '\n';
+		std::cout << "Last price: " << prices.back() << '\n';
+		std::cout << "Share value: "
+				  << shares * prices.back()
+				  << '\n';
+		double finalEquity = wallet + shares * prices.back();
+		double finalReturn = (finalEquity - 100000.0) / 100000.0 * 100.0;
+		std::cout << "Final Return: " << finalReturn << std::endl;
 	}
 };
 
