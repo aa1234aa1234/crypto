@@ -17,8 +17,9 @@ void CsvReader::ReadCsv(std::vector<Candle>& history, const char* filepath) {
 		while(std::getline(ss, word, ',')) {
 			row.push_back(word);
 		}
+		if(row[0][0] != '2') continue;
 
-		history.push_back(Candle{row[0], std::stod(row[1]), std::stod(row[2]), std::stod(row[3]), std::stod(row[4]), std::stod(row[5])});
+		history.push_back(Candle{row[0], std::stod(row[1]), std::stod(row[2]), std::stod(row[3]), std::stod(row[4]), std::stol(row[5])});
 	}
 
 	file.close();
