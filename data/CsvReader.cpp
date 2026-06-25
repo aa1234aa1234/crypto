@@ -5,6 +5,7 @@
 #include <iostream>
 
 void CsvReader::ReadCsv(std::vector<Candle>& history, const char* filepath) {
+	history.clear();
 	std::ifstream file(filepath);
 
 	if(!file.is_open()) { std::cerr << "couldnt open file " << filepath << std::endl; return; }

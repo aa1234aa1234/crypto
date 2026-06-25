@@ -15,11 +15,12 @@ public:
 	void run(std::vector<double>& prices, std::vector<Candle>& candles) {
 		int buys = 0, sells = 0;
 
-		for(int i = 50; i<prices.size() - 1; i++) {
+		for(int i = 200; i<prices.size() - 1; i++) {
 			std::cout << "date: " << candles[i].date << std::endl;
 			std::cout << "wallet: " << wallet << std::endl;
 			if(wallet <= 0) { std::cout << "out of funds stopping backtesting" << std::endl; return; }
 			double ema50 = indicators::ema(prices, i, 50);
+			double ema200 = indicators::ema(prices, i, 200);
 
 			double sma20 = indicators::sma(prices,i,20);
 			double sma50 = indicators::sma(prices,i,50);
@@ -30,13 +31,15 @@ public:
 			bool goldencross = prev20 <= prev50 && sma20 > sma50;
 			bool deathcross = prev20 >= prev50 && sma20 < sma50;
 
-			if (goldencross && shares == 0) {
+			bool uptrend = prices[i] > ema50;
+
+			if (goldencross && prices[i] > ema200 && shares == 0) {
         		shares = wallet / prices[i + 1];
         		wallet -= shares * prices[i + 1];
 				buys += 1;
     		}
 
-    		if (deathcross && shares > 0) {
+    		if ((deathcross) && shares > 0) {
         		wallet += shares * prices[i + 1];
         		shares = 0;
     			sells++;
