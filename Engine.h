@@ -4,10 +4,12 @@
 #include "Candle.h"
 
 class BackTester;
+class IndicatorsEngine;
 
 class Engine {
 	std::vector<Candle> candles;
 	BackTester* backTester;
+	IndicatorsEngine* indicatorsEngine;
 public:
 	Engine();
 	~Engine();

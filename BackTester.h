@@ -8,8 +8,9 @@
 class BackTester {
 	double wallet = 100000;
 	int shares = 0;
+	IndicatorsEngine* engine;
 public:
-	BackTester() {}
+	BackTester(IndicatorsEngine* engine) { this->engine = engine; }
 	~BackTester() {}
 
 	void run(std::vector<double>& prices, std::vector<Candle>& candles) {

@@ -1,9 +1,11 @@
 #include "Engine.h"
 #include "BackTester.h"
+#include "IndicatorsEngine.h"
 
 
 Engine::Engine() {
-	backTester = new BackTester();
+	indicatorsEngine = new IndicatorsEngine();
+	backTester = new BackTester(indicatorsEngine);
 }
 
 Engine::~Engine() {
