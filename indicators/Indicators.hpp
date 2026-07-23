@@ -24,6 +24,32 @@ namespace indicators {
 
 		return ema;
 	}
+
+	class SMA
+	{
+		int value = 0;
+
+		void calculateValue(const std::vector<double>& prices, int index, int period)
+		{
+			if(prices.size() < period) return;
+
+			double sum = 0.0;
+			for(int i = (index > prices.size() ? prices.size() : index) - period + 1; i<=index; i++) sum += prices[i];
+
+			value = sum/period;
+		}
+	public:
+		SMA(const std::vector<double>& prices, int index, int period)
+		{
+			calculateValue(prices, index, period);
+		}
+		~SMA() {}
+
+		void recalculateValue(int period)
+		{
+
+		}
+	};
 }
 
 

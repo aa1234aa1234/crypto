@@ -9,8 +9,8 @@
 
 class IndicatorsEngine {
 public:
-    IndicatorsEngine() {}
-    ~IndicatorsEngine() {}
+    IndicatorsEngine();
+    ~IndicatorsEngine();
 };
 
 

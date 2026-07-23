@@ -3,3 +3,15 @@
 //
 
 #include "IndicatorsEngine.h"
+
+IndicatorsEngine::IndicatorsEngine()
+{
+
+}
+
+IndicatorsEngine::~IndicatorsEngine()
+{
+
+}
+
+
