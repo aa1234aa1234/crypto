@@ -4,13 +4,23 @@
 
 #ifndef INDICATORSENGINE_H
 #define INDICATORSENGINE_H
+#include <map>
 
-
+#include "Indicators.hpp"
+#include "Candle.h"
+#include <cstdarg>
+#include <unordered_map>
 
 class IndicatorsEngine {
+    std::unordered_map<indicators::IndicatorType,indicators::Indicator*> indicators{};
 public:
     IndicatorsEngine();
     ~IndicatorsEngine();
+
+    void addIndicator(indicators::Indicator* indicator);
+    void update(const Candle& candle);
+    template<typename T>
+    T* getIndicator(std::vector<int> params);
 };
 
 

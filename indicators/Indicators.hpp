@@ -1,6 +1,9 @@
 #pragma once
 #include <vector>
 #include <cmath>
+#include <queue>
+#include <typeindex>
+#include "Candle.h"
 
 namespace indicators {
 	inline double sma(const std::vector<double>& prices, int index, int period) {
@@ -25,9 +28,36 @@ namespace indicators {
 		return ema;
 	}
 
-	class SMA
+	struct IndicatorType
 	{
-		int value = 0;
+		std::type_index type;
+		std::vector<int> periods;
+
+		bool operator==(IndicatorType& other) const
+		{
+			bool flag = true;
+			if (other.periods.size() != periods.size()) return false;
+			for (int i = 0; i<periods.size(); i++) if (periods[i] != other.periods[i]) { flag = false; return false; }
+			return flag && other.type == type;
+		}
+	};
+
+	class Indicator
+	{
+	public:
+		virtual ~Indicator() = default;
+		[[nodiscard]] virtual double getValue() const = 0;
+		virtual void recalculate(const Candle& candle);
+		virtual std::string getTypeId();
+		virtual IndicatorType getType();
+	};
+
+	class SMA : public Indicator
+	{
+		IndicatorType type{std::type_index(typeid(SMA))};
+		double sum = 0;
+		int period = 0;
+		std::queue<double> prices;
 
 		void calculateValue(const std::vector<double>& prices, int index, int period)
 		{
@@ -36,19 +66,33 @@ namespace indicators {
 			double sum = 0.0;
 			for(int i = (index > prices.size() ? prices.size() : index) - period + 1; i<=index; i++) sum += prices[i];
 
-			value = sum/period;
+			this->sum = sum;
 		}
 	public:
-		SMA(const std::vector<double>& prices, int index, int period)
+		SMA(const std::vector<double>& prices, int index, int period) : period(period)
 		{
 			calculateValue(prices, index, period);
 		}
-		~SMA() {}
 
-		void recalculateValue(int period)
+		SMA(int period) : period(period)
 		{
-
+			type.periods = {period};
 		}
+
+		void recalculate(const Candle& candle) override
+		{
+			sum += candle.close;
+			prices.push(candle.close);
+			if (prices.size() > period)
+			{
+				sum -= prices.front(); prices.pop();
+			}
+		}
+
+		double getValue() const override { return prices.size() == period ? sum/period : -1; }
+
+		std::string getTypeId() override { return typeid(SMA).name() + period; }
+		IndicatorType getType() override { return type; }
 	};
 }
 
@@ -72,3 +116,5 @@ namespace indicators {
 // MACD
 // breakout systems
 // combinations of indicators
+
+//api token PyubX3eliL6CQZue15khySlmfjGpuEyBUXcPrNJmOI3Mk50MRtVX3xrtjkZzNOwtBjNUm4rAj-rzPiRuvpllhw

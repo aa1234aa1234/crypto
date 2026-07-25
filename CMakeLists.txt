@@ -6,6 +6,7 @@ file(GLOB SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/data/*.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/indicators/*.hpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/indicators/*.cpp"
 )
 
 include_directories(data)
