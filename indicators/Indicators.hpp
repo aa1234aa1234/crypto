@@ -28,12 +28,13 @@ namespace indicators {
 		return ema;
 	}
 
+
 	struct IndicatorType
 	{
 		std::type_index type;
 		std::vector<int> periods;
 
-		bool operator==(IndicatorType& other) const
+		bool operator==(const IndicatorType& other) const
 		{
 			bool flag = true;
 			if (other.periods.size() != periods.size()) return false;
@@ -42,14 +43,16 @@ namespace indicators {
 		}
 	};
 
+
+
 	class Indicator
 	{
 	public:
 		virtual ~Indicator() = default;
 		[[nodiscard]] virtual double getValue() const = 0;
-		virtual void recalculate(const Candle& candle);
-		virtual std::string getTypeId();
-		virtual IndicatorType getType();
+		virtual void recalculate(const Candle& candle) = 0;
+		virtual std::string getTypeId() = 0;
+		virtual IndicatorType getType() = 0;
 	};
 
 	class SMA : public Indicator
@@ -94,7 +97,37 @@ namespace indicators {
 		std::string getTypeId() override { return typeid(SMA).name() + period; }
 		IndicatorType getType() override { return type; }
 	};
+
+	class EMA : public Indicator
+	{
+		IndicatorType type{std::type_index(typeid(EMA))};
+		int period;
+	public:
+		EMA(int period) : period(period)
+		{
+			type.periods = {period};
+		}
+
+		void recalculate(const Candle& candle) override
+		{
+
+		}
+
+		double getValue() const override { return period; }
+
+		std::string getTypeId() override { return typeid(EMA).name() + period; }
+		IndicatorType getType() override { return type; }
+	};
 }
+
+template<>
+	struct std::hash<indicators::IndicatorType>
+{
+	size_t operator()(const indicators::IndicatorType& indicator) const
+	{
+		return std::hash<std::type_index>()(indicator.type);
+	}
+};
 
 
 //Trend:

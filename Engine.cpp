@@ -6,6 +6,8 @@
 Engine::Engine() {
 	indicatorsEngine = new IndicatorsEngine();
 	backTester = new BackTester(indicatorsEngine);
+
+	indicatorsEngine->addIndicator(new indicators::SMA(200));
 }
 
 Engine::~Engine() {
