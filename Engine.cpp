@@ -8,6 +8,13 @@ Engine::Engine() {
 	backTester = new BackTester(indicatorsEngine);
 
 	indicatorsEngine->addIndicator(new indicators::SMA(200));
+	indicatorsEngine->addIndicator(new indicators::EMA(200, indicatorsEngine->getIndicator<indicators::SMA>({200})));
+	indicatorsEngine->addIndicator(new indicators::SMA(50));
+	indicatorsEngine->addIndicator(new indicators::SMA(10));
+	indicatorsEngine->addIndicator(new indicators::SMA(5));
+	indicatorsEngine->addIndicator(new indicators::SMA(2));
+
+	indicatorsEngine->update(Candle{"ewa", 100,100,100,100,100});
 }
 
 Engine::~Engine() {

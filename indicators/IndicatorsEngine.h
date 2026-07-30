@@ -12,6 +12,7 @@
 #include <unordered_map>
 
 class IndicatorsEngine {
+    std::vector<indicators::IndicatorType> indicator_order;
     std::unordered_map<indicators::IndicatorType,indicators::Indicator*> indicators{};
 public:
     IndicatorsEngine();

@@ -49,7 +49,7 @@ namespace indicators {
 	{
 	public:
 		virtual ~Indicator() = default;
-		[[nodiscard]] virtual double getValue() const = 0;
+		[[nodiscard]] virtual double getValue() = 0;
 		virtual void recalculate(const Candle& candle) = 0;
 		virtual std::string getTypeId() = 0;
 		virtual IndicatorType getType() = 0;
@@ -60,6 +60,7 @@ namespace indicators {
 		IndicatorType type{std::type_index(typeid(SMA))};
 		double sum = 0;
 		int period = 0;
+		double lastValue = 0;
 		std::queue<double> prices;
 
 		void calculateValue(const std::vector<double>& prices, int index, int period)
@@ -92,7 +93,7 @@ namespace indicators {
 			}
 		}
 
-		double getValue() const override { return prices.size() == period ? sum/period : -1; }
+		double getValue() override { lastValue=prices.size() == period ? sum/period : -1; return lastValue; }
 
 		std::string getTypeId() override { return typeid(SMA).name() + period; }
 		IndicatorType getType() override { return type; }
@@ -102,21 +103,32 @@ namespace indicators {
 	{
 		IndicatorType type{std::type_index(typeid(EMA))};
 		int period;
+		double lastValue = 0;
+		const double alpha = 2. / (period + 1.0);
 	public:
-		EMA(int period) : period(period)
+		EMA(int period, SMA* sma) : period(period)
 		{
 			type.periods = {period};
+			lastValue = sma->getValue();
 		}
 
 		void recalculate(const Candle& candle) override
 		{
-
+			lastValue = alpha * candle.close + lastValue * (1-alpha);
 		}
 
-		double getValue() const override { return period; }
+		double getValue() override { return lastValue; }
 
 		std::string getTypeId() override { return typeid(EMA).name() + period; }
 		IndicatorType getType() override { return type; }
+	};
+
+	class RSI : public Indicator
+	{
+		IndicatorType type{std::type_index(typeid(RSI))};
+		int period;
+	public:
+		RSI() {}
 	};
 }
 

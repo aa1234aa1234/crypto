@@ -5,6 +5,7 @@
 #include "IndicatorsEngine.h"
 
 #include <stdexcept>
+#include <utility>
 
 #include "Candle.h"
 
@@ -21,13 +22,14 @@ IndicatorsEngine::~IndicatorsEngine()
 void IndicatorsEngine::addIndicator(indicators::Indicator* indicator)
 {
     indicators[indicator->getType()] = indicator;
+    indicator_order.push_back(indicator->getType());
 }
 
 void IndicatorsEngine::update(const Candle& candle)
 {
-    for (auto& p : indicators)
+    for (auto& p : indicator_order)
     {
-        p.second->recalculate(candle);
+        indicators[p]->recalculate(candle);
     }
 }
 
@@ -35,9 +37,12 @@ template<typename T>
 T* IndicatorsEngine::getIndicator(std::vector<int> params)
 {
     if (indicators.size() < 1) return nullptr;
-    auto type = indicators::IndicatorType{std::type_index(typeid(T)), std::vector<int>(params)};
+    auto type = indicators::IndicatorType{std::type_index(typeid(T)), std::vector<int>(std::move(params))};
     if (indicators.find(type) != indicators.end()) return static_cast<T*>(indicators[type]);
     throw std::runtime_error(std::string("indicator not found ") + std::string(typeid(T).name()));
 }
+
+template indicators::SMA* IndicatorsEngine::getIndicator<indicators::SMA>(std::vector<int> params);
+template indicators::EMA* IndicatorsEngine::getIndicator<indicators::EMA>(std::vector<int> params);
 
 
