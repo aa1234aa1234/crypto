@@ -19,6 +19,7 @@ Engine::Engine() {
 
 Engine::~Engine() {
 	if(backTester) delete backTester;
+	if (indicatorsEngine) delete indicatorsEngine;
 }
 
 std::vector<Candle>& Engine::getCandles() { return candles; }

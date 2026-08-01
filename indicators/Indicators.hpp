@@ -128,7 +128,9 @@ namespace indicators {
 		IndicatorType type{std::type_index(typeid(RSI))};
 		int period;
 	public:
-		RSI() {}
+		RSI(int period) : period(period) {}
+
+		IndicatorType getType() override { return type; }
 	};
 }
 
