@@ -9,11 +9,11 @@ file(GLOB SOURCES
 		"${CMAKE_CURRENT_SOURCE_DIR}/indicators/*.cpp"
 )
 
-#set(CURL_USE_LIBPSL OFF CACHE BOOL "" FORCE)
+set(CURL_USE_LIBPSL OFF CACHE BOOL "" FORCE)
 add_subdirectory(thirdparty/curl-8.21.0)
 include_directories(data)
 include_directories(indicators)
 
 add_executable(crypto ${SOURCES})
 
-target_link_libraries(crypto PRIVATE CURL::libpsl)
+#target_link_libraries(crypto PRIVATE CURL::libpsl)

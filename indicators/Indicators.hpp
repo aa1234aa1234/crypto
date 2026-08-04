@@ -127,9 +127,52 @@ namespace indicators {
 	{
 		IndicatorType type{std::type_index(typeid(RSI))};
 		int period;
+		double averageGain, averageLoss, sumGain, sumLoss, prevPrice;
+		bool flag = false;
 	public:
 		RSI(int period) : period(period) {}
 
+		void recalculate(const Candle& candle) override
+		{
+			static int count = 0;
+			if (!count)
+			{
+				prevPrice = candle.close;
+				count++;
+				return;
+			}
+
+			double change = candle.close - prevPrice;
+			prevPrice = candle.close;
+
+			double gain = std::max(change,0.0), loss = std::max(-change, 0.0);
+
+			if (!flag)
+			{
+				sumGain += gain, sumLoss += loss;
+				count++;
+				if (count == period + 1)
+				{
+					averageGain = sumGain / count;
+					averageLoss = sumLoss / count;
+					flag = true;
+				}
+				return;
+			}
+
+			averageGain = (averageGain * (period - 1) + gain) / period;
+			averageLoss = (averageLoss * (period - 1) + loss) / period;
+		}
+
+		double getValue() override
+		{
+			if (!flag) return -1;
+			if (averageLoss == 0.0) return 100.0;
+
+			return 100.0 - (100.0 / (1.0 + (averageGain / averageLoss)));
+		}
+
+		std::string getTypeId() override { return typeid(RSI).name() + period; }
 		IndicatorType getType() override { return type; }
 	};
 }
