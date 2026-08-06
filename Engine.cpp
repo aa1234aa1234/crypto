@@ -1,11 +1,13 @@
 #include "Engine.h"
 #include "BackTester.h"
 #include "IndicatorsEngine.h"
+#include "StrategyEngine.h"
 
 
 Engine::Engine() {
 	indicatorsEngine = new IndicatorsEngine();
 	backTester = new BackTester(indicatorsEngine);
+	strategyEngine = new StrategyEngine(indicatorsEngine);
 
 	indicatorsEngine->addIndicator(new indicators::SMA(200));
 	indicatorsEngine->addIndicator(new indicators::SMA(50));
@@ -16,6 +18,7 @@ Engine::Engine() {
 Engine::~Engine() {
 	if(backTester) delete backTester;
 	if (indicatorsEngine) delete indicatorsEngine;
+	if (strategyEngine) delete strategyEngine;
 }
 
 std::vector<Candle>& Engine::getCandles() { return candles; }
@@ -27,4 +30,5 @@ void Engine::run() {
 		prices.push_back(p.close);
 	}
 	backTester->run(prices, candles);
+
 }

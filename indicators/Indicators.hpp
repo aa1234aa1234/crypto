@@ -47,10 +47,13 @@ namespace indicators {
 
 	class Indicator
 	{
+	protected:
+		std::deque<double> value_history;
 	public:
 		virtual ~Indicator() = default;
 		[[nodiscard]] virtual double getValue() = 0;
 		virtual void recalculate(const Candle& candle) = 0;
+		double previous(int idx=1) { return value_history[value_history.size() - 1 - idx]; }
 		virtual std::string getTypeId() = 0;
 		virtual IndicatorType getType() = 0;
 	};
@@ -85,6 +88,7 @@ namespace indicators {
 
 		void recalculate(const Candle& candle) override
 		{
+			value_history.push_back(sum);
 			sum += candle.close;
 			prices.push(candle.close);
 			if (prices.size() > period)
@@ -114,6 +118,7 @@ namespace indicators {
 
 		void recalculate(const Candle& candle) override
 		{
+			value_history.push_back(lastValue);
 			lastValue = alpha * candle.close + lastValue * (1-alpha);
 		}
 
@@ -135,6 +140,7 @@ namespace indicators {
 		void recalculate(const Candle& candle) override
 		{
 			static int count = 0;
+			value_history.push_back(getValue());
 			if (!count)
 			{
 				prevPrice = candle.close;

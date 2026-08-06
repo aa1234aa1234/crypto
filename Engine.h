@@ -5,11 +5,13 @@
 
 class BackTester;
 class IndicatorsEngine;
+class StrategyEngine;
 
 class Engine {
 	std::vector<Candle> candles;
 	BackTester* backTester;
 	IndicatorsEngine* indicatorsEngine;
+	StrategyEngine* strategyEngine;
 public:
 	Engine();
 	~Engine();
