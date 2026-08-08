@@ -16,4 +16,4 @@ include_directories(indicators)
 
 add_executable(crypto ${SOURCES})
 
-#target_link_libraries(crypto PRIVATE CURL::libpsl)
+target_link_libraries(crypto PRIVATE CURL::libpsl)

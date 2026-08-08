@@ -13,7 +13,7 @@ class StrategyEngine {
     IndicatorsEngine* indicatorsengine;
 public:
     StrategyEngine(IndicatorsEngine* indicatorsengine) : indicatorsengine(indicatorsengine) {}
-    ~StrategyEngine() {}
+    ~StrategyEngine();
 
     void run(const Candle& candle);
 };
