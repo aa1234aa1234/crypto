@@ -3,6 +3,7 @@
 //
 
 #include "Application.h"
+#include <curl/curl.h>
 
 bool Application::isRunning = false;
 

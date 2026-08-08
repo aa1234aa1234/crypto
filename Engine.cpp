@@ -1,13 +1,17 @@
 #include "Engine.h"
+
+#include "Application.h"
 #include "BackTester.h"
 #include "IndicatorsEngine.h"
 #include "StrategyEngine.h"
-
+#include "curl/CurlClient.h"
 
 Engine::Engine() {
 	indicatorsEngine = new IndicatorsEngine();
 	backTester = new BackTester(indicatorsEngine);
 	strategyEngine = new StrategyEngine(indicatorsEngine);
+	curlClient = new CurlClient();
+	curlClient->renew_access_code();
 
 	indicatorsEngine->addIndicator(new indicators::SMA(200));
 	indicatorsEngine->addIndicator(new indicators::SMA(50));
@@ -24,12 +28,20 @@ Engine::~Engine() {
 
 std::vector<Candle>& Engine::getCandles() { return candles; }
 
-void Engine::run() {
+void Engine::initialize()
+{
 	std::vector<double> prices;
 	for(auto& p : candles) {
 		indicatorsEngine->update(p);
 		prices.push_back(p.close);
 	}
-	backTester->run(prices, candles);
+}
 
+
+void Engine::run() {
+	Candle candle = curlClient->getCurrentPrice("005930").to_candle();
+	indicatorsEngine->update(candle);
+	strategyEngine->run(candle);
+	std::cout << candle.close << std::endl;
+	//backTester->run(prices, candles);
 }

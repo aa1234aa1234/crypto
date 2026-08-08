@@ -6,6 +6,7 @@
 #define APPLICATION_H
 #include "Engine.h"
 #include "CsvReader.h"
+#include "curl/curl_http.h"
 
 class Application {
 	CsvReader csvReader;
@@ -14,6 +15,7 @@ public:
     static bool isRunning;
     Application();
     ~Application() {
+    	curl_http::clear_curl();
 	};
 
     void run();
