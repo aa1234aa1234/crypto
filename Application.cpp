@@ -9,10 +9,11 @@ bool Application::isRunning = false;
 
 Application::Application()
 {
-	csvReader.ReadCsv(engine.getCandles(), "../a.csv");
+	engine = new Engine();
+	csvReader.ReadCsv(engine->getCandles(), "../a.csv");
 }
 
 void Application::run()
 {
-	engine.run();
+	engine->run();
 }

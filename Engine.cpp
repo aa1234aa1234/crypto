@@ -18,6 +18,7 @@ Engine::Engine() {
 	indicatorsEngine->addIndicator(new indicators::EMA(200, indicatorsEngine->getIndicator<indicators::SMA>({200})));
 	indicatorsEngine->addIndicator(new indicators::EMA(50, indicatorsEngine->getIndicator<indicators::SMA>({50})));
 	indicatorsEngine->addIndicator(new indicators::RSI(14));
+	initialize();
 }
 
 Engine::~Engine() {

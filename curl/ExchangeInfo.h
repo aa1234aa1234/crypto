@@ -22,14 +22,15 @@ struct price_info
 
     static void from_json(const nlohmann::json& object, price_info& info)
     {
-        info.stockcode = object["stk_cd"].get<std::string>();
-        info.name = object["stk_nm"].get<std::string>();
-        info.current_price = object["cur_prc"].get<double>();
-        info.close_price = object["close_pric"].get<double>();
-        info.low_price = object["low_pric"].get<double>();
-        info.high_price = object["high_pric"].get<double>();
-        info.open_price = object["open_pric"].get<double>();
-        info.volume = object["trde_qty"].get<long>();
+        auto a = std::atof(object["atn_stk_infr"][0]["cur_prc"].get<std::string>().c_str());
+        info.stockcode = object["atn_stk_infr"][0]["stk_cd"].get<std::string>();
+        info.name = object["atn_stk_infr"][0]["stk_nm"].get<std::string>();
+        info.current_price = std::atof(object["atn_stk_infr"][0]["cur_prc"].get<std::string>().c_str());
+        info.close_price = std::atof(object["atn_stk_infr"][0]["close_pric"].get<std::string>().c_str());
+        info.low_price = std::atof(object["atn_stk_infr"][0]["low_pric"].get<std::string>().c_str());
+        info.high_price = std::atof(object["atn_stk_infr"][0]["high_pric"].get<std::string>().c_str());
+        info.open_price = std::atof(object["atn_stk_infr"][0]["open_pric"].get<std::string>().c_str());
+        info.volume = std::atol(object["atn_stk_infr"][0]["trde_qty"].get<std::string>().c_str());
     }
 
     nlohmann::json to_json()

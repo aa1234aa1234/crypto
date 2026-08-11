@@ -16,7 +16,8 @@ IndicatorsEngine::IndicatorsEngine()
 
 IndicatorsEngine::~IndicatorsEngine()
 {
-
+    for (auto& p : indicators) if (p.second) delete p.second;
+    indicators.clear();
 }
 
 void IndicatorsEngine::addIndicator(indicators::Indicator* indicator)

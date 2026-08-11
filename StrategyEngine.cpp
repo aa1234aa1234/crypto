@@ -8,7 +8,6 @@
 
 StrategyEngine::~StrategyEngine()
 {
-    if (indicatorsengine) delete indicatorsengine;
 }
 
 void StrategyEngine::run(const Candle& candle)
@@ -18,4 +17,6 @@ void StrategyEngine::run(const Candle& candle)
     auto ema200 = indicatorsengine->getIndicator<indicators::EMA>({200});
     auto ema50 = indicatorsengine->getIndicator<indicators::EMA>({50});
     auto rsi14 = indicatorsengine->getIndicator<indicators::RSI>({14});
+
+
 }

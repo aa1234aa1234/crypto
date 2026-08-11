@@ -135,7 +135,10 @@ namespace indicators {
 		double averageGain, averageLoss, sumGain, sumLoss, prevPrice;
 		bool flag = false;
 	public:
-		RSI(int period) : period(period) {}
+		RSI(int period) : period(period)
+		{
+			type.periods = {period};
+		}
 
 		void recalculate(const Candle& candle) override
 		{

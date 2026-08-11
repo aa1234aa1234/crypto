@@ -11,7 +11,7 @@ void CurlClient::renew_access_code()
     object["grant_type"] = "client_credentials";
     object["appkey"] = "ZRK-dYuSHW-0NIgqmZsxmqGNxrxrULstTOmgnfyq8f0";
     object["secretkey"] = "8ORyOtPtCvlzl4UEpsqiQodNZpwcpRJi-K8EVaslvVY";
-    access_code = nlohmann::json::parse(curl_http::http_post_request("https://api.kiwoom.com/api/oauth2/token", {}, object))["token"];
+    access_code = nlohmann::json::parse(curl_http::http_post_request("https://api.kiwoom.com/oauth2/token", {}, object))["token"];
 }
 
 price_info CurlClient::getCurrentPrice(const std::string& stockcode)

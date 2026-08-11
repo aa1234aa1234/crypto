@@ -68,9 +68,12 @@ namespace curl_http
         // list = curl_slist_append(list, "next-key: ");
         // list = curl_slist_append(list, api_id.c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
         auto jsonstr = data.dump(0);
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonstr);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonstr.c_str());
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, static_cast<long>(jsonstr.size()));
+        curl_easy_setopt(curl, CURLOPT_POST, 1);
 
         CURLcode err_code = curl_easy_perform(curl);
         if (err_code != CURLE_OK)

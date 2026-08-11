@@ -10,11 +10,12 @@
 
 class Application {
 	CsvReader csvReader;
-	Engine engine;
+	Engine* engine;
 public:
     static bool isRunning;
     Application();
     ~Application() {
+    	delete engine;
     	curl_http::clear_curl();
 	};
 
