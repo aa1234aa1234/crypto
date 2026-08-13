@@ -11,9 +11,20 @@ Application::Application()
 {
 	engine = new Engine();
 	csvReader.ReadCsv(engine->getCandles(), "../a.csv");
+	engine->initialize();
 }
 
 void Application::run()
 {
-	engine->run();
+	double deltatime=0, lasttime=0;
+	lasttime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	while (isRunning)
+	{
+		double currenttime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		deltatime = currenttime - lasttime;
+		if (deltatime < 60000) continue;
+		engine->run();
+		lasttime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	}
+
 }

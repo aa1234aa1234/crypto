@@ -3,6 +3,9 @@
 //
 
 #include "CurlClient.h"
+
+#include <iostream>
+
 #include "curl_http.h"
 
 void CurlClient::renew_access_code()

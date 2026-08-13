@@ -10,8 +10,24 @@
 class IndicatorsEngine;
 
 class StrategyEngine {
+    enum MarketState
+    {
+        UPTREND,
+        SIDEWAYS,
+        DOWNTREND,
+    } market_state;
+
     IndicatorsEngine* indicatorsengine;
+
+    void update_regime(const Candle& candle);
 public:
+    enum Position
+    {
+        FLAT,
+        LONG,
+        SHORT
+    } position;
+
     StrategyEngine(IndicatorsEngine* indicatorsengine) : indicatorsengine(indicatorsengine) {}
     ~StrategyEngine();
 
