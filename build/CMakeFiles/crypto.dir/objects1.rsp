@@ -1,1 +1,1 @@
-CMakeFiles/crypto.dir/Application.cpp.obj CMakeFiles/crypto.dir/Engine.cpp.obj CMakeFiles/crypto.dir/data/CsvReader.cpp.obj CMakeFiles/crypto.dir/main.cpp.obj
+CMakeFiles/crypto.dir/Application.cpp.obj CMakeFiles/crypto.dir/Engine.cpp.obj CMakeFiles/crypto.dir/StrategyEngine.cpp.obj CMakeFiles/crypto.dir/curl/CurlClient.cpp.obj CMakeFiles/crypto.dir/data/CsvReader.cpp.obj CMakeFiles/crypto.dir/indicators/IndicatorsEngine.cpp.obj CMakeFiles/crypto.dir/main.cpp.obj

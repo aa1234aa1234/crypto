@@ -10,6 +10,7 @@
 class IndicatorsEngine;
 
 class StrategyEngine {
+	double wallet, asset;
     enum MarketState
     {
         UPTREND,

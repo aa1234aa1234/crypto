@@ -43,6 +43,7 @@ void StrategyEngine::update_regime(const Candle& candle)
 
 void StrategyEngine::run(const Candle& candle)
 {
+	static int runcnt = 0;
     auto sma200 = indicatorsengine->getIndicator<indicators::SMA>({200});
     auto sma50 = indicatorsengine->getIndicator<indicators::SMA>({50});
     auto ema200 = indicatorsengine->getIndicator<indicators::EMA>({200});
@@ -73,5 +74,12 @@ void StrategyEngine::run(const Candle& candle)
     }
 
     std::cout << position << std::endl;
+	if(position == LONG) asset = static_cast<int>(wallet/candle.close), wallet -= asset*candle.close;
+	if(position == SHORT) wallet += candle.close * asset, asset = 0;
+	std::cout << "-----------------------" << std::endl << "backtest run " << runcnt << std::endl;
+	std::cout << "position: " << position << std::endl;
+	printf("sma200: %lf\nsma50: %lf\nema200: %lf\nema50: %lf\nrsi14: %lf\n", sma200->getValue(), sma50->getValue(), ema200->getValue(), ema50->getValue(), rsi14->getValue());
+	std::cout << "-----------------------" << std::endl << std::endl;
     std::cout << ema200->getValue() << std::endl << rsi14->getValue() << std::endl;
+	runcnt++;
 }
