@@ -78,7 +78,12 @@ namespace indicators {
 	public:
 		SMA(const std::vector<double>& prices, int index, int period) : period(period)
 		{
-			calculateValue(prices, index, period);
+			//calculateValue(prices, index, period);
+			for (auto& p : prices)
+			{
+				Candle cCandle{"", p};
+				SMA::recalculate(cCandle);
+			}
 		}
 
 		SMA(int period) : period(period)
@@ -88,7 +93,7 @@ namespace indicators {
 
 		void recalculate(const Candle& candle) override
 		{
-			value_history.push_back(sum);
+			value_history.push_back(getValue());
 			sum += candle.close;
 			prices.push(candle.close);
 			if (prices.size() > period)

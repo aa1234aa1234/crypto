@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "curl_http.h"
+#include <regex>
 
 void CurlClient::renew_access_code()
 {
@@ -17,13 +18,24 @@ void CurlClient::renew_access_code()
     access_code = nlohmann::json::parse(curl_http::http_post_request("https://api.kiwoom.com/oauth2/token", {}, object))["token"];
 }
 
-price_info CurlClient::getCurrentPrice(const std::string& stockcode)
+price_info CurlClient::getCurrentPrice(const std::string& stockcode, const std::string& stextp)
 {
-    std::string authorization = "authorization: Bearer " + access_code, api_id = "api-id: ka10095";;
+    std::string api_id = "", uri = "https://api.kiwoom.com/api/dostk/stkinfo", type="dom";
     nlohmann::json object;
+    if (std::regex_match(stockcode, std::regex(R"(^[0-9]{6}$)"))) api_id = "api-id: ka10095";
+    else
+    {
+        api_id = "api-id: usa20100";
+        object["stex_tp"] = stextp;
+        uri = "https://api.kiwoom.com/api/us/mrkcond";
+        type = "int";
+    }
+    std::string authorization = "authorization: Bearer " + access_code;
+
     object["stk_cd"] = stockcode;
-    std::string response = curl_http::http_post_request("https://api.kiwoom.com/api/dostk/stkinfo", {authorization.c_str(), "cont-yn: N", "next-key: ", api_id.c_str()}, object);
+    std::string response = curl_http::http_post_request(uri.c_str(), {authorization.c_str(), "cont-yn: N", "next-key: ", api_id.c_str()}, object);
     price_info priceinfo;
-    price_info::from_json(nlohmann::json::parse(response), priceinfo);
+    nlohmann::json jsonobject = nlohmann::json::parse(response);
+    price_info::from_json(type == "dom" ? jsonobject["atn_stk_infr"][0] : jsonobject, priceinfo, type);
     return priceinfo;
 }

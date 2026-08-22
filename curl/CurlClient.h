@@ -13,7 +13,7 @@ public:
     ~CurlClient() {}
 
     void renew_access_code();
-    price_info getCurrentPrice(const std::string& stockcode);
+    price_info getCurrentPrice(const std::string& stockcode, const std::string& stextp="");
     //add more for buying and selling
 };
 
