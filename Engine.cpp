@@ -42,7 +42,7 @@ void Engine::run() {
 	static double prev_price = 0;
 	Candle candle = curlClient->getCurrentPrice("AAPL", "ND").to_candle();
 	candle.normalize();
-	//if (candle.close == prev_price) return;
+	if (candle.close == prev_price) return;
 	indicatorsEngine->update(candle);
 	strategyEngine->run(candle);
 	prev_price = candle.close;
