@@ -52,15 +52,32 @@ void StrategyEngine::run(const Candle& candle)
     auto ema200 = indicatorsengine->getIndicator<indicators::EMA>({200});
     auto ema50 = indicatorsengine->getIndicator<indicators::EMA>({50});
     auto rsi14 = indicatorsengine->getIndicator<indicators::RSI>({14});
+    auto lowrc = indicatorsengine->getIndicator<indicators::RC<"LOW">>({});
+    auto highrc = indicatorsengine->getIndicator<indicators::RC<"HIGH">>({});
 
     update_regime(candle);
 
+    double sma200slope = ((sma200->getValue() - sma200->previous(20))/sma200->previous(20));
+    double candle_range = (highrc->getValue()-lowrc->getValue()) / candle.close;
+
+    //add a candle range to signal
+    //update to atr later
+    /*double range = candle.high - candle.low;
+    double atr = ...;
+
+    range < 2.0 * atr
+    range/atr < candle.close*/
+
     int signal = false;
+
+    double distance = std::abs(candle.close-ema50->getValue()) /ema50->getValue();
+
+    bool nearEma50 = distance <= 0.01;
 
     switch (market_state)
     {
     case UPTREND:
-        signal = (candle.low <= ema50->getValue()*1.005 && is_price_near(candle.close, ema50) && rsi14->getValue() >= 50);
+        signal = (lowrc->getValue() <= ema50->getValue()*(1+0.01) && is_price_near(candle.close, ema50) && rsi14->getValue() >= 50);
         if (signal && position == FLAT)
         {
             position = LONG;
@@ -71,7 +88,7 @@ void StrategyEngine::run(const Candle& candle)
         break;
     case DOWNTREND:
         signal = (
-        candle.high >= ema50->getValue() * 0.995 &&
+        highrc->getValue() >= ema50->getValue() * (1-0.01) &&
         is_price_near(candle.close, ema50) &&
         rsi14->getValue() <= 50
         );
@@ -113,6 +130,19 @@ void StrategyEngine::run(const Candle& candle)
 	std::cout << "-----------------------" << std::endl << "backtest run " << runcnt << std::endl;
 	std::cout << "position: " << position << std::endl;
 	printf("sma200: %lf\nsma50: %lf\nema200: %lf\nema50: %lf\nrsi14: %lf\n", sma200->getValue(), sma50->getValue(), ema200->getValue(), ema50->getValue(), rsi14->getValue());
+    backtest += string_format("close/sma200: %.4f\n"
+    "sma50/sma200: %.4f\n"
+    "sma200 slope: %.4f\n"
+    "close/ema50 distance: %.4f\n"
+    "low/ema50 distance: %.4f\n"
+    "candle range: %.4f\n",
+
+    candle.close / sma200->getValue(),
+    sma50->getValue() / sma200->getValue(),
+    sma200slope,
+    (candle.close - ema50->getValue()) / ema50->getValue(),
+    (candle.low - ema50->getValue()) / ema50->getValue(),
+    (candle.high - candle.low) / candle.close);
     std::cout << backtest;
     //if (position == LONG) printf("assets: %lf\ncurrent price: %lf\nwallet: %lf\n", asset, candle.close, wallet);
     //else if (position == SHORT) printf("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);

@@ -6,6 +6,18 @@
 #include "Candle.h"
 
 namespace indicators {
+
+	template<size_t N>
+	struct string
+	{
+		char data[N + 1];
+
+		constexpr string(const char (&str)[N])
+		{
+			std::copy(str, str + N, data);
+		}
+	};
+
 	inline double sma(const std::vector<double>& prices, int index, int period) {
 		if(prices.size() < period) return NAN;
 
@@ -130,6 +142,32 @@ namespace indicators {
 		double getValue() override { return lastValue; }
 
 		std::string getTypeId() override { return typeid(EMA).name() + period; }
+		IndicatorType getType() override { return type; }
+	};
+
+	template<string T>
+	class RC : public Indicator
+	{
+		IndicatorType type{std::type_index(typeid(RC))};
+		double low,high;
+	public:
+		RC(double low) : low(low), high(low) {}
+		~RC() = default;
+		void recalculate(const Candle& candle) override
+		{
+			#if typeid(T).name == "LOW"
+				value_history.push_back(low);
+			#else
+				value_history.push_back(high);
+			#endif
+
+			low = candle.close < low ? candle.close : low;
+			high = candle.close > high ? candle.close : high;
+		}
+
+		double getValue() override { return typeid(T).name == "LOW" ? low : high; }
+
+		std::string getTypeId() override { return typeid(RC).name() + typeid(T).name(); }
 		IndicatorType getType() override { return type; }
 	};
 

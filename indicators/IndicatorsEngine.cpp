@@ -46,5 +46,6 @@ T* IndicatorsEngine::getIndicator(std::vector<int> params)
 template indicators::SMA* IndicatorsEngine::getIndicator<indicators::SMA>(std::vector<int> params);
 template indicators::EMA* IndicatorsEngine::getIndicator<indicators::EMA>(std::vector<int> params);
 template indicators::RSI* IndicatorsEngine::getIndicator<indicators::RSI>(std::vector<int> params);
+template indicators::RC* IndicatorsEngine::getIndicator<indicators::RC>(std::vector<int> params);
 
 

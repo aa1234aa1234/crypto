@@ -5,6 +5,8 @@
 #include "IndicatorsEngine.h"
 #include "StrategyEngine.h"
 #include "curl/CurlClient.h"
+#include <regex>
+
 
 Engine::Engine() {
 	indicatorsEngine = new IndicatorsEngine();
@@ -18,6 +20,8 @@ Engine::Engine() {
 	indicatorsEngine->addIndicator(new indicators::EMA(200, indicatorsEngine->getIndicator<indicators::SMA>({200})));
 	indicatorsEngine->addIndicator(new indicators::EMA(50, indicatorsEngine->getIndicator<indicators::SMA>({50})));
 	indicatorsEngine->addIndicator(new indicators::RSI(14));
+	indicatorsEngine->addIndicator(new indicators::RC<"LOW">(curlClient->getCurrentPrice("AAPL", "ND").low_price));
+	indicatorsEngine->addIndicator(new indicators::RC<"HIGH">(curlClient->getCurrentPrice("AAPL", "ND").low_price));
 }
 
 Engine::~Engine() {
