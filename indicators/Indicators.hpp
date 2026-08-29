@@ -4,6 +4,8 @@
 #include <queue>
 #include <typeindex>
 #include "Candle.h"
+#define LOW 0
+#define HIGH 1
 
 namespace indicators {
 
@@ -145,7 +147,7 @@ namespace indicators {
 		IndicatorType getType() override { return type; }
 	};
 
-	template<string T>
+	template<int T>
 	class RC : public Indicator
 	{
 		IndicatorType type{std::type_index(typeid(RC))};
@@ -155,7 +157,7 @@ namespace indicators {
 		~RC() = default;
 		void recalculate(const Candle& candle) override
 		{
-			#if typeid(T).name == "LOW"
+			#if T == LOW
 				value_history.push_back(low);
 			#else
 				value_history.push_back(high);
@@ -165,10 +167,24 @@ namespace indicators {
 			high = candle.close > high ? candle.close : high;
 		}
 
-		double getValue() override { return typeid(T).name == "LOW" ? low : high; }
+		double getValue() override { return T == LOW ? low : high; }
 
-		std::string getTypeId() override { return typeid(RC).name() + typeid(T).name(); }
+		std::string getTypeId() override { return typeid(RC).name() + T; }
 		IndicatorType getType() override { return type; }
+	};
+
+	class ATR : public Indicator
+	{
+		IndicatorType type{std::type_index(typeid(ATR))};
+		int period;
+	public:
+		ATR(int period) : period(period) {}
+		~ATR() = default;
+
+		void recalculate(const Candle& candle) override
+		{
+
+		}
 	};
 
 	class RSI : public Indicator

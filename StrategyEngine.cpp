@@ -28,13 +28,15 @@ void StrategyEngine::update_regime(const Candle& candle)
     auto rsi14 = indicatorsengine->getIndicator<indicators::RSI>({14});
 
     double sma200slope = ((sma200->getValue() - sma200->previous(20))/sma200->previous(20));
+    double sma50slope = ((sma50->getValue() - sma50->previous(20))/sma50->previous(20)*100.0);
+    double ema50slope = ((ema50->getValue() - ema50->previous(20))/ema50->previous(20)*100.0);
 
-    if (candle.close > sma200->getValue() && sma50->getValue() > sma200->getValue() && sma200slope > 0.01)
+    if (candle.close > sma200->getValue() && sma50->getValue() > sma200->getValue() && ema50slope > 0.1)
     {
         market_state = UPTREND;
     }
 
-    else if (candle.close < sma200->getValue() && sma50->getValue() < sma200->getValue() && sma200slope < -0.01)
+    else if (candle.close < sma200->getValue() && sma50->getValue() < sma200->getValue() && ema50slope < -0.1)
     {
         market_state = DOWNTREND;
     }
@@ -52,12 +54,13 @@ void StrategyEngine::run(const Candle& candle)
     auto ema200 = indicatorsengine->getIndicator<indicators::EMA>({200});
     auto ema50 = indicatorsengine->getIndicator<indicators::EMA>({50});
     auto rsi14 = indicatorsengine->getIndicator<indicators::RSI>({14});
-    auto lowrc = indicatorsengine->getIndicator<indicators::RC<"LOW">>({});
-    auto highrc = indicatorsengine->getIndicator<indicators::RC<"HIGH">>({});
+    auto lowrc = indicatorsengine->getIndicator<indicators::RC<LOW>>({});
+    auto highrc = indicatorsengine->getIndicator<indicators::RC<HIGH>>({});
 
     update_regime(candle);
 
     double sma200slope = ((sma200->getValue() - sma200->previous(20))/sma200->previous(20));
+    double ema50slope = ((ema50->getValue() - ema50->previous(20))/ema50->previous(20)*100.0);
     double candle_range = (highrc->getValue()-lowrc->getValue()) / candle.close;
 
     //add a candle range to signal
@@ -96,7 +99,7 @@ void StrategyEngine::run(const Candle& candle)
         {
             position = FLAT;
             wallet += candle.close * asset, asset = 0;
-            backtest += string_format("exited LONG position at %lf", candle.close);
+            backtest += string_format("exited LONG position at %lf\n", candle.close);
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
         }
         if (position == FLAT && signal)
@@ -110,9 +113,11 @@ void StrategyEngine::run(const Candle& candle)
     case SIDEWAYS:
         if (position == LONG)
         {
-            wallet += asset * candle.close;
-            asset = 0;
             backtest += string_format("exited LONG position at %lf\n", candle.close);
+            wallet += asset * candle.close;
+            backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
+
+            asset = 0;
         }
         else if (position == SHORT)
         {
@@ -125,6 +130,7 @@ void StrategyEngine::run(const Candle& candle)
     }
 
     std::cout << position << std::endl;
+    std::cout << "market state: " << market_state << std::endl;
 	//if(position == LONG) asset = static_cast<int>(wallet/candle.close), wallet -= asset*candle.close;
 	//if(position == SHORT) wallet += candle.close * asset, asset = 0;
 	std::cout << "-----------------------" << std::endl << "backtest run " << runcnt << std::endl;
@@ -135,6 +141,7 @@ void StrategyEngine::run(const Candle& candle)
     "sma200 slope: %.4f\n"
     "close/ema50 distance: %.4f\n"
     "low/ema50 distance: %.4f\n"
+    "ema50 slope: %lf\n"
     "candle range: %.4f\n",
 
     candle.close / sma200->getValue(),
@@ -142,7 +149,8 @@ void StrategyEngine::run(const Candle& candle)
     sma200slope,
     (candle.close - ema50->getValue()) / ema50->getValue(),
     (candle.low - ema50->getValue()) / ema50->getValue(),
-    (candle.high - candle.low) / candle.close);
+    ema50slope,
+    candle_range);
     std::cout << backtest;
     //if (position == LONG) printf("assets: %lf\ncurrent price: %lf\nwallet: %lf\n", asset, candle.close, wallet);
     //else if (position == SHORT) printf("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);

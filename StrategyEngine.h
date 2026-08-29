@@ -24,10 +24,10 @@ class StrategyEngine {
 public:
     enum Position
     {
-        FLAT,
+        FLAT=0,
         LONG,
         SHORT
-    } position;
+    } position = FLAT;
 
     StrategyEngine(IndicatorsEngine* indicatorsengine) : indicatorsengine(indicatorsengine) {}
     ~StrategyEngine();

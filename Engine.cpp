@@ -6,6 +6,7 @@
 #include "StrategyEngine.h"
 #include "curl/CurlClient.h"
 #include <regex>
+#include <algorithm>
 
 
 Engine::Engine() {
@@ -20,8 +21,8 @@ Engine::Engine() {
 	indicatorsEngine->addIndicator(new indicators::EMA(200, indicatorsEngine->getIndicator<indicators::SMA>({200})));
 	indicatorsEngine->addIndicator(new indicators::EMA(50, indicatorsEngine->getIndicator<indicators::SMA>({50})));
 	indicatorsEngine->addIndicator(new indicators::RSI(14));
-	indicatorsEngine->addIndicator(new indicators::RC<"LOW">(curlClient->getCurrentPrice("AAPL", "ND").low_price));
-	indicatorsEngine->addIndicator(new indicators::RC<"HIGH">(curlClient->getCurrentPrice("AAPL", "ND").low_price));
+	indicatorsEngine->addIndicator(new indicators::RC<LOW>(curlClient->getCurrentPrice("AAPL", "ND").low_price));
+	indicatorsEngine->addIndicator(new indicators::RC<HIGH>(curlClient->getCurrentPrice("AAPL", "ND").low_price));
 }
 
 Engine::~Engine() {
@@ -44,12 +45,21 @@ void Engine::initialize()
 
 void Engine::run() {
 	static double prev_price = 0;
-	Candle candle = curlClient->getCurrentPrice("AAPL", "ND").to_candle();
+	static std::vector<Candle> prices;
+	CsvReader reader;
+	if (prices.size() == 0)
+	{
+		reader.ReadCsv(prices, "../../a.csv");
+		std::reverse(prices.begin(), prices.end());
+	}
+	//Candle candle = curlClient->getCurrentPrice("AAPL", "ND").to_candle();
+	Candle candle = prices.back(); prices.pop_back();
 	candle.normalize();
 	if (candle.close == prev_price) return;
 	indicatorsEngine->update(candle);
 	strategyEngine->run(candle);
 	prev_price = candle.close;
 	std::cout << candle.close << std::endl;
+	if (prices.size() == 0) Application::isRunning = false;
 	//backTester->run(prices, candles);
 }
