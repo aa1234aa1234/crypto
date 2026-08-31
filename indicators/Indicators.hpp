@@ -4,6 +4,7 @@
 #include <queue>
 #include <typeindex>
 #include "Candle.h"
+#include <algorithm>
 #define LOW 0
 #define HIGH 1
 
@@ -168,6 +169,7 @@ namespace indicators {
 		}
 
 		double getValue() override { return T == LOW ? low : high; }
+		double low_or_high(int g) { return g == LOW ? low : high;}
 
 		std::string getTypeId() override { return typeid(RC).name() + T; }
 		IndicatorType getType() override { return type; }
@@ -177,14 +179,54 @@ namespace indicators {
 	{
 		IndicatorType type{std::type_index(typeid(ATR))};
 		int period;
+		double value;
+
+		RC<LOW>* running_candle;
 	public:
-		ATR(int period) : period(period) {}
+		template<int T>
+		ATR(int period, RC<T>* rc) : period(period), running_candle(rc)
+		{
+			type.periods = {period};
+		}
 		~ATR() = default;
 
 		void recalculate(const Candle& candle) override
 		{
+			static double prev_close = 0.0f;
+			static int count = 0;
+			if (count == 0)
+			{
+				prev_close = candle.close;
+				count++;
+				return;
+			}
 
+			const double tr = std::max({
+				running_candle->low_or_high(HIGH) - running_candle->low_or_high(LOW),
+				std::abs(running_candle->low_or_high(HIGH) - prev_close),
+				std::abs(running_candle->low_or_high(LOW) - prev_close)
+			});
+
+			prev_close = candle.close;
+			if (count < period)
+			{
+				value += tr;
+				count++;
+				if (count == period)
+				{
+					value /= period;
+					value_history.push_back(value);
+				}
+				return;
+			}
+			value_history.push_back(value);
+			value = ((period - 1) * value + tr) / period;
 		}
+
+		double getValue() override { return value; }
+
+		std::string getTypeId() override { return typeid(ATR).name() + period; }
+		IndicatorType getType() override { return type; }
 	};
 
 	class RSI : public Indicator

@@ -25,23 +25,51 @@ void StrategyEngine::update_regime(const Candle& candle)
     auto sma50 = indicatorsengine->getIndicator<indicators::SMA>({50});
     auto ema200 = indicatorsengine->getIndicator<indicators::EMA>({200});
     auto ema50 = indicatorsengine->getIndicator<indicators::EMA>({50});
+    auto ema21 = indicatorsengine->getIndicator<indicators::EMA>({21});
+    auto ema9 = indicatorsengine->getIndicator<indicators::EMA>({9});
     auto rsi14 = indicatorsengine->getIndicator<indicators::RSI>({14});
+    auto atr14 = indicatorsengine->getIndicator<indicators::ATR>({14});
 
     double sma200slope = ((sma200->getValue() - sma200->previous(20))/sma200->previous(20));
-    double sma50slope = ((sma50->getValue() - sma50->previous(20))/sma50->previous(20)*100.0);
-    double ema50slope = ((ema50->getValue() - ema50->previous(20))/ema50->previous(20)*100.0);
+    double sma50slope = ((sma50->getValue() - sma50->previous(20))/atr14->getValue());
+    double ema50slope = ((ema50->getValue() - ema50->previous(10))/atr14->getValue());
+    double ema21slope = ((ema21->getValue() - ema21->previous(10))/atr14->getValue());
 
-    if (candle.close > sma200->getValue() && sma50->getValue() > sma200->getValue() && ema50slope > 0.1)
+    trendscore = 0.0;
+
+    if (ema9->getValue() > ema21->getValue())
     {
-        market_state = UPTREND;
+        trendscore += 0.20;
     }
+    else trendscore -= 0.20;
 
-    else if (candle.close < sma200->getValue() && sma50->getValue() < sma200->getValue() && ema50slope < -0.1)
-    {
-        market_state = DOWNTREND;
-    }
+    if (ema21->getValue() > ema50->getValue()) trendscore += 0.250;
+    else trendscore -= 0.250;
 
+    if (ema21slope > 0.10) trendscore += 0.20;
+    else if (ema21slope < -0.10) trendscore -= 0.20;
+
+    if (ema50slope > 0.10) trendscore += 0.20;
+    else if (ema50slope < -0.10) trendscore -= 0.20;
+
+    if (candle.close > sma200->getValue()) trendscore += 0.10;
+    else trendscore -= 0.20;
+
+    if (trendscore >= 0.60) market_state = UPTREND;
+    else if (trendscore <= -0.60) market_state = DOWNTREND;
     else market_state = SIDEWAYS;
+
+    // if (candle.close > sma200->getValue() && sma50->getValue() > sma200->getValue() && ema50slope > 0.1)
+    // {
+    //     market_state = UPTREND;
+    // }
+    //
+    // else if (candle.close < sma200->getValue() && sma50->getValue() < sma200->getValue() && ema50slope < -0.1)
+    // {
+    //     market_state = DOWNTREND;
+    // }
+    //
+    // else market_state = SIDEWAYS;
 }
 
 void StrategyEngine::run(const Candle& candle)
@@ -53,14 +81,19 @@ void StrategyEngine::run(const Candle& candle)
     auto sma50 = indicatorsengine->getIndicator<indicators::SMA>({50});
     auto ema200 = indicatorsengine->getIndicator<indicators::EMA>({200});
     auto ema50 = indicatorsengine->getIndicator<indicators::EMA>({50});
+    auto ema21 = indicatorsengine->getIndicator<indicators::EMA>({21});
+    auto ema9 = indicatorsengine->getIndicator<indicators::EMA>({9});
     auto rsi14 = indicatorsengine->getIndicator<indicators::RSI>({14});
+    auto atr14 = indicatorsengine->getIndicator<indicators::ATR>({14});
     auto lowrc = indicatorsengine->getIndicator<indicators::RC<LOW>>({});
     auto highrc = indicatorsengine->getIndicator<indicators::RC<HIGH>>({});
 
     update_regime(candle);
 
     double sma200slope = ((sma200->getValue() - sma200->previous(20))/sma200->previous(20));
-    double ema50slope = ((ema50->getValue() - ema50->previous(20))/ema50->previous(20)*100.0);
+    double sma50slope = ((sma50->getValue() - sma50->previous(20))/atr14->getValue());
+    double ema50slope = ((ema50->getValue() - ema50->previous(10))/atr14->getValue());
+    double ema21slope = ((ema21->getValue() - ema21->previous(10))/atr14->getValue());
     double candle_range = (highrc->getValue()-lowrc->getValue()) / candle.close;
 
     //add a candle range to signal
@@ -72,10 +105,6 @@ void StrategyEngine::run(const Candle& candle)
     range/atr < candle.close*/
 
     int signal = false;
-
-    double distance = std::abs(candle.close-ema50->getValue()) /ema50->getValue();
-
-    bool nearEma50 = distance <= 0.01;
 
     switch (market_state)
     {
@@ -121,7 +150,7 @@ void StrategyEngine::run(const Candle& candle)
         }
         else if (position == SHORT)
         {
-            wallet -= asset * candle.close;
+            wallet -= short_quantity * candle.close;
             backtest += string_format("covered SHORT position at: %lf with %lf short quantity\n", candle.close, short_quantity);
             short_quantity = 0;
         }
@@ -142,6 +171,8 @@ void StrategyEngine::run(const Candle& candle)
     "close/ema50 distance: %.4f\n"
     "low/ema50 distance: %.4f\n"
     "ema50 slope: %lf\n"
+    "trendscore : %lf\n"
+    "ema21 slope: %lf\n"
     "candle range: %.4f\n",
 
     candle.close / sma200->getValue(),
@@ -150,6 +181,8 @@ void StrategyEngine::run(const Candle& candle)
     (candle.close - ema50->getValue()) / ema50->getValue(),
     (candle.low - ema50->getValue()) / ema50->getValue(),
     ema50slope,
+    trendscore,
+    ema21slope,
     candle_range);
     std::cout << backtest;
     //if (position == LONG) printf("assets: %lf\ncurrent price: %lf\nwallet: %lf\n", asset, candle.close, wallet);
