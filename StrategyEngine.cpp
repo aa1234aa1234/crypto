@@ -39,14 +39,14 @@ void StrategyEngine::update_regime(const Candle& candle)
 
     if (ema9->getValue() > ema21->getValue())
     {
-        trendscore += 0.20;
+        trendscore += 0.25;
     }
     else trendscore -= 0.20;
 
     if (ema21->getValue() > ema50->getValue()) trendscore += 0.250;
     else trendscore -= 0.250;
 
-    if (ema21slope > 0.10) trendscore += 0.20;
+    if (ema21slope > 0.06) trendscore += 0.20;
     else if (ema21slope < -0.10) trendscore -= 0.20;
 
     if (ema50slope > 0.10) trendscore += 0.20;
@@ -55,7 +55,7 @@ void StrategyEngine::update_regime(const Candle& candle)
     if (candle.close > sma200->getValue()) trendscore += 0.10;
     else trendscore -= 0.20;
 
-    if (trendscore >= 0.60) market_state = UPTREND;
+    if (trendscore >= 0.50) market_state = UPTREND;
     else if (trendscore <= -0.60) market_state = DOWNTREND;
     else market_state = SIDEWAYS;
 
