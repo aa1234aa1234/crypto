@@ -12,9 +12,9 @@ StrategyEngine::~StrategyEngine()
 {
 }
 
-static bool is_price_near(double price, indicators::Indicator* indicator)
+static bool is_price_near(double price, indicators::Indicator* indicator, double atr14)
 {
-    constexpr double DISTANCE_THRESHOLD = 0.01;
+    const double DISTANCE_THRESHOLD = std::abs(price - indicator->getValue()) / atr14;
     double distance = std::abs(price-indicator->getValue()) / indicator->getValue();
     return distance<=DISTANCE_THRESHOLD;
 }
@@ -39,23 +39,23 @@ void StrategyEngine::update_regime(const Candle& candle)
 
     if (ema9->getValue() > ema21->getValue())
     {
-        trendscore += 0.25;
+        trendscore += 0.20;
     }
     else trendscore -= 0.20;
 
     if (ema21->getValue() > ema50->getValue()) trendscore += 0.250;
     else trendscore -= 0.250;
 
-    if (ema21slope > 0.06) trendscore += 0.20;
+    if (ema21slope > 0.08) trendscore += 0.20;
     else if (ema21slope < -0.10) trendscore -= 0.20;
 
     if (ema50slope > 0.10) trendscore += 0.20;
     else if (ema50slope < -0.10) trendscore -= 0.20;
 
-    if (candle.close > sma200->getValue()) trendscore += 0.10;
-    else trendscore -= 0.20;
+    if (candle.close > sma200->getValue()) trendscore += 0.20;
+    else trendscore -= 0.10;
 
-    if (trendscore >= 0.50) market_state = UPTREND;
+    if (trendscore >= 0.60) market_state = UPTREND;
     else if (trendscore <= -0.60) market_state = DOWNTREND;
     else market_state = SIDEWAYS;
 
@@ -94,7 +94,7 @@ void StrategyEngine::run(const Candle& candle)
     double sma50slope = ((sma50->getValue() - sma50->previous(20))/atr14->getValue());
     double ema50slope = ((ema50->getValue() - ema50->previous(10))/atr14->getValue());
     double ema21slope = ((ema21->getValue() - ema21->previous(10))/atr14->getValue());
-    double candle_range = (highrc->getValue()-lowrc->getValue()) / candle.close;
+    double candle_range = (highrc->getValue()-lowrc->getValue());
 
     //add a candle range to signal
     //update to atr later
@@ -109,7 +109,11 @@ void StrategyEngine::run(const Candle& candle)
     switch (market_state)
     {
     case UPTREND:
-        signal = (lowrc->getValue() <= ema50->getValue()*(1+0.01) && is_price_near(candle.close, ema50) && rsi14->getValue() >= 50);
+        signal = (
+            lowrc->getValue() <= ema50->getValue()*(1+0.01) &&
+            is_price_near(candle.close, ema50, atr14->getValue()) &&
+            rsi14->getValue() >= 50 &&
+            candle_range < 2.0 * atr14->getValue());
         if (signal && position == FLAT)
         {
             position = LONG;
@@ -121,8 +125,9 @@ void StrategyEngine::run(const Candle& candle)
     case DOWNTREND:
         signal = (
         highrc->getValue() >= ema50->getValue() * (1-0.01) &&
-        is_price_near(candle.close, ema50) &&
-        rsi14->getValue() <= 50
+        is_price_near(candle.close, ema50, atr14->getValue()) &&
+        rsi14->getValue() <= 50 &&
+        candle_range > 2.0 * atr14->getValue()
         );
         if (signal && position == LONG)
         {
@@ -136,6 +141,7 @@ void StrategyEngine::run(const Candle& candle)
             position = SHORT;
             short_quantity += static_cast<int>(wallet/candle.close);
             wallet += short_quantity * candle.close;
+            backtest += string_format("entered SHORT position at: %lf with %lf assets\n", candle.close, short_quantity);
             backtest += string_format("short quantity: %lf\nbought at: %lf\nwallet: %lf\n", short_quantity, candle.close, wallet);
         }
         break;
@@ -152,6 +158,7 @@ void StrategyEngine::run(const Candle& candle)
         {
             wallet -= short_quantity * candle.close;
             backtest += string_format("covered SHORT position at: %lf with %lf short quantity\n", candle.close, short_quantity);
+            backtest += string_format("wallet: %lf\n", wallet);
             short_quantity = 0;
         }
         position = FLAT;
@@ -173,7 +180,9 @@ void StrategyEngine::run(const Candle& candle)
     "ema50 slope: %lf\n"
     "trendscore : %lf\n"
     "ema21 slope: %lf\n"
-    "candle range: %.4f\n",
+    "ema9: %lf\n"
+    "candle range: %.4f\n"
+    "wallet: %lf\n",
 
     candle.close / sma200->getValue(),
     sma50->getValue() / sma200->getValue(),
@@ -183,7 +192,9 @@ void StrategyEngine::run(const Candle& candle)
     ema50slope,
     trendscore,
     ema21slope,
-    candle_range);
+    ema9->getValue(),
+    candle_range,
+    wallet);
     std::cout << backtest;
     //if (position == LONG) printf("assets: %lf\ncurrent price: %lf\nwallet: %lf\n", asset, candle.close, wallet);
     //else if (position == SHORT) printf("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);

@@ -25,8 +25,10 @@ Engine::Engine() {
 	indicatorsEngine->addIndicator(new indicators::EMA(21, indicatorsEngine->getIndicator<indicators::SMA>({21})));
 	indicatorsEngine->addIndicator(new indicators::EMA(9, indicatorsEngine->getIndicator<indicators::SMA>({9})));
 	indicatorsEngine->addIndicator(new indicators::RSI(14));
-	indicatorsEngine->addIndicator(new indicators::RC<LOW>(curlClient->getCurrentPrice("AAPL", "ND").low_price));
-	indicatorsEngine->addIndicator(new indicators::RC<HIGH>(curlClient->getCurrentPrice("AAPL", "ND").low_price));
+	//indicatorsEngine->addIndicator(new indicators::RC<LOW>(curlClient->getCurrentPrice("AAPL", "ND").low_price));
+	//indicatorsEngine->addIndicator(new indicators::RC<HIGH>(curlClient->getCurrentPrice("AAPL", "ND").low_price));
+	indicatorsEngine->addIndicator(new indicators::RC<LOW>(313.29));
+	indicatorsEngine->addIndicator(new indicators::RC<HIGH>(313.29));
 	indicatorsEngine->addIndicator(new indicators::ATR(14,indicatorsEngine->getIndicator<indicators::RC<LOW>>({})));
 }
 
