@@ -32,8 +32,8 @@ void StrategyEngine::update_regime(const Candle& candle)
 
     double sma200slope = ((sma200->getValue() - sma200->previous(20))/sma200->previous(20));
     double sma50slope = ((sma50->getValue() - sma50->previous(20))/atr14->getValue());
-    double ema50slope = ((ema50->getValue() - ema50->previous(10))/atr14->getValue());
-    double ema21slope = ((ema21->getValue() - ema21->previous(10))/atr14->getValue());
+    double ema50slope = ((ema50->getValue() - ema50->previous(20))/atr14->getValue());
+    double ema21slope = ((ema21->getValue() - ema21->previous(20))/atr14->getValue());
 
     trendscore = 0.0;
 
