@@ -12,6 +12,7 @@ class IndicatorsEngine;
 class StrategyEngine {
 	double wallet=500, asset;
     double trendscore = 0.0;
+    std::string backtest;
     enum MarketState
     {
         UPTREND,
