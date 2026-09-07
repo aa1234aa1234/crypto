@@ -27,8 +27,8 @@ Engine::Engine() {
 	indicatorsEngine->addIndicator(new indicators::RSI(14));
 	//indicatorsEngine->addIndicator(new indicators::RC<LOW>(curlClient->getCurrentPrice("AAPL", "ND").low_price));
 	//indicatorsEngine->addIndicator(new indicators::RC<HIGH>(curlClient->getCurrentPrice("AAPL", "ND").low_price));
-	indicatorsEngine->addIndicator(new indicators::RC<LOW>(313.29));
-	indicatorsEngine->addIndicator(new indicators::RC<HIGH>(313.29));
+	indicatorsEngine->addIndicator(new indicators::RC<LOW>(258000));
+	indicatorsEngine->addIndicator(new indicators::RC<HIGH>(258000));
 	indicatorsEngine->addIndicator(new indicators::ATR(14,indicatorsEngine->getIndicator<indicators::RC<LOW>>({})));
 }
 
@@ -52,21 +52,24 @@ void Engine::initialize()
 
 void Engine::run() {
 	static double prev_price = 0;
+	static std::vector<Candle>::iterator it;
 	static std::vector<Candle> prices;
-	CsvReader reader;
 	if (prices.size() == 0)
 	{
-		reader.ReadCsv(prices, "../../a.csv");
-		std::reverse(prices.begin(), prices.end());
+		CsvReader reader;
+		reader.ReadCsv(prices, "../../aa.csv");
+		it = prices.begin();
+		//std::reverse(prices.begin(), prices.end());
 	}
 	//Candle candle = curlClient->getCurrentPrice("AAPL", "ND").to_candle();
-	Candle candle = prices.back(); prices.pop_back();
+	Candle candle = *it; ++it;
 	candle.normalize();
-	if (candle.close == prev_price) return;
+	if (candle.close == prev_price) { return; }
 	indicatorsEngine->update(candle);
 	strategyEngine->run(candle);
 	prev_price = candle.close;
 	std::cout << candle.close << std::endl;
-	if (prices.size() == 0) Application::isRunning = false;
+	if (it == prices.end()-1)
+		Application::isRunning = false;
 	//backTester->run(prices, candles);
 }

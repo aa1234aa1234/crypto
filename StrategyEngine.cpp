@@ -28,11 +28,9 @@ void StrategyEngine::update_regime(const Candle& candle)
 {
     auto sma200 = indicatorsengine->getIndicator<indicators::SMA>({200});
     auto sma50 = indicatorsengine->getIndicator<indicators::SMA>({50});
-    auto ema200 = indicatorsengine->getIndicator<indicators::EMA>({200});
     auto ema50 = indicatorsengine->getIndicator<indicators::EMA>({50});
     auto ema21 = indicatorsengine->getIndicator<indicators::EMA>({21});
     auto ema9 = indicatorsengine->getIndicator<indicators::EMA>({9});
-    auto rsi14 = indicatorsengine->getIndicator<indicators::RSI>({14});
     auto atr14 = indicatorsengine->getIndicator<indicators::ATR>({14});
 
     double sma200slope = ((sma200->getValue() - sma200->previous(20))/sma200->previous(20));
@@ -91,6 +89,8 @@ void StrategyEngine::update_regime(const Candle& candle)
         trendscore -= 0.20;
         backtest += "ema50 slope < -0.10 trendscore - 20\n";
     }
+
+    trendscore += 0.10 * std::clamp((ema9->getValue()-candle.close)/candle.close, -1.0, 1.0);
 
     if (candle.close > sma200->getValue())
     {
@@ -234,6 +234,10 @@ void StrategyEngine::run(const Candle& candle)
         }
         position = FLAT;
         break;
+    }
+    if (runcnt == 1510 || runcnt == 1508)
+    {
+        std::cout << "fewafwaefa\n";
     }
 
     std::cout << position << std::endl;
