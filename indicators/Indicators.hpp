@@ -152,9 +152,10 @@ namespace indicators {
 	class RC : public Indicator
 	{
 		IndicatorType type{std::type_index(typeid(RC))};
+		std::string curr_date;
 		double low,high;
 	public:
-		RC(double low) : low(low), high(low) {}
+		RC(double low) : low(0), high(0) {}
 		~RC() = default;
 		void recalculate(const Candle& candle) override
 		{
@@ -163,9 +164,16 @@ namespace indicators {
 			#else
 				value_history.push_back(high);
 			#endif
-
+			if (curr_date != candle.date.substr(0,10))
+			{
+				curr_date = candle.date.substr(0, 10);
+				low = candle.close;
+				high = candle.close;
+				return;
+			}
 			low = candle.close < low ? candle.close : low;
 			high = candle.close > high ? candle.close : high;
+
 		}
 
 		double getValue() override { return T == LOW ? low : high; }
