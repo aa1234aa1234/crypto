@@ -61,6 +61,7 @@ void Engine::run() {
 		it = prices.begin();
 		//std::reverse(prices.begin(), prices.end());
 	}
+	//auto ca = curlClient->getCurrentPrice("005930");
 	//Candle candle = curlClient->getCurrentPrice("AAPL", "ND").to_candle();
 	Candle candle = *it; ++it;
 	candle.normalize();

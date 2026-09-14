@@ -209,11 +209,12 @@ namespace indicators {
 				return;
 			}
 
-			// const double tr = std::max({
-			// 	running_candle->low_or_high(HIGH) - running_candle->low_or_high(LOW),
-			// 	std::abs(running_candle->low_or_high(HIGH) - prev_close),
-			// 	std::abs(running_candle->low_or_high(LOW) - prev_close)
-			// });
+			 //const double tr = std::max({
+			 //	running_candle->low_or_high(HIGH) - running_candle->low_or_high(LOW),
+			 //	std::abs(running_candle->low_or_high(HIGH) - prev_close),
+			 //	std::abs(running_candle->low_or_high(LOW) - prev_close)
+			 //});
+
 			const double tr = std::abs(candle.close - prev_close);
 
 			prev_close = candle.close;
