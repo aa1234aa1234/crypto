@@ -56,7 +56,7 @@ void StrategyEngine::update_regime(const Candle& candle)
 
     double sma200slope = ((sma200->getValue() - sma200->previous(20))/sma200->previous(20));
     double sma50slope = ((sma50->getValue() - sma50->previous(20))/atr14->getValue());
-    double ema50slope = ((ema50->getValue() - ema50->previous(5))/atr14->getValue());
+    double ema50slope = ((ema50->getValue() - ema50->previous(10))/atr14->getValue());
     double ema21slope = ((ema21->getValue() - ema21->previous(5))/atr14->getValue());
     double ema9slope = ((ema9->getValue() - ema9->previous(5))/atr14->getValue());
 
@@ -100,26 +100,30 @@ void StrategyEngine::update_regime(const Candle& candle)
         backtest += "ema21 slope <= 0.08 trendscore - 20\n";
     }
 
-    if (ema50slope > 0)
-    {
-        trendscore += 0.20;
-        backtest += "ema50 slope > 0.10 trendscore + 20\n";
-    }
-    else if (ema50slope < -0.80) {
-        trendscore -= 0.20;
-        backtest += "ema50 slope < -0.10 trendscore - 20\n";
-    }
+    // if (ema50slope > 0.5)
+    // {
+    //     trendscore += 0.20;
+    //     backtest += "ema50 slope > 0.10 trendscore + 20\n";
+    // }
+    // else if (ema50slope < -0.80) {
+    //     trendscore -= 0.20;
+    //     backtest += "ema50 slope < -0.10 trendscore - 20\n";
+    // }
+    trendscore += 0.10 * (ema50slope/0.5);
+    backtest += string_format("%lf from ema50slope\n", 0.10*(ema50slope/0.5));
 
-    trendscore += 0.10 * std::clamp((ema9->getValue()-candle.close)/candle.close, -1.0, 1.0);
+    trendscore += 0.05 * std::clamp((ema9->getValue()-candle.close)/atr14->getValue(), -1.0, 1.0);
 
     if (candle.close > sma200->getValue())
     {
         trendscore += 0.20 * std::clamp((candle.close-sma200->getValue())/atr14->getValue(),0.0,1.0);
         backtest += "candle > sma200 trendscore + 20\n";
     }
-    else
+    else if ((candle.close-ema9->getValue())/atr14->getValue() <= -3.0 && candle.close < sma200->getValue())
     {
-        trendscore -= 0.20;
+        //trendscore += 0.10 * std::clamp((candle.close-sma200->getValue())/atr14->getValue(),-1.0,1.0);
+        trendscore -= 0.10;
+        backtest += string_format("%lf",(candle.close-ema9->getValue()/atr14->getValue()));
         backtest += "candle <= sma200 trendscore - 10\n";
     }
 
@@ -135,7 +139,7 @@ void StrategyEngine::update_regime(const Candle& candle)
         }
     }
 
-    if (trendscore >= 0.58 && efficiency >= 0.20)
+    if (trendscore >= 0.58 && efficiency >= 0.00)
     {
         if (uptrend_confirm < 2) { uptrend_confirm++; downtrend_confirm=0; }
         else
@@ -146,7 +150,7 @@ void StrategyEngine::update_regime(const Candle& candle)
             uptrend_confirm = 0;
         }
     }
-    else if (trendscore <= -0.60 && efficiency >= 0.20)
+    else if (trendscore <= -0.60 && efficiency >= 0.00)
     {
         if (downtrend_confirm < 2) { downtrend_confirm++; uptrend_confirm=0; }
         else
@@ -159,8 +163,8 @@ void StrategyEngine::update_regime(const Candle& candle)
     else
     {
         market_state = SIDEWAYS;
-        //uptrend_confirm = 0;
-        //downtrend_confirm = 0;
+        uptrend_confirm = 0;
+        downtrend_confirm = 0;
     }
 
     switch (market_state)
@@ -384,6 +388,7 @@ void StrategyEngine::run(const Candle& candle)
     "ema9: %lf\n"
     "atr14: %lf\n"
     "candle range: %.4f\n"
+    "ema21 value: %lf\n"
     "wallet: %lf\n",
 
     candle.close / sma200->getValue(),
@@ -397,6 +402,7 @@ void StrategyEngine::run(const Candle& candle)
     ema9->getValue(),
     atr14->getValue(),
     candle_range,
+    ema21->getValue(),
     wallet);
     std::cout << backtest;
     //if (position == LONG) printf("assets: %lf\ncurrent price: %lf\nwallet: %lf\n", asset, candle.close, wallet);
