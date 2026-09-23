@@ -238,6 +238,7 @@ void StrategyEngine::run(const Candle& candle)
             wallet += candle.close * asset, asset = 0;
             backtest += string_format("exited LONG position at %lf due to stopgap\n", candle.close);
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
+            backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
             break;
         }
         // strong_uptrend =candle.close > sma200->getValue() && ema21->getValue() > ema50->getValue() && ema50slope > 0.5;
@@ -327,6 +328,7 @@ void StrategyEngine::run(const Candle& candle)
             wallet += candle.close * asset, asset = 0;
             backtest += string_format("exited LONG position at %lf\n", candle.close);
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
+            backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
         }
         if (position == FLAT && signal)
         {
@@ -343,6 +345,7 @@ void StrategyEngine::run(const Candle& candle)
             backtest += string_format("exited LONG position at %lf\n", candle.close);
             wallet += asset * candle.close;
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
+            backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
 
             asset = 0;
         }
