@@ -31,7 +31,7 @@ static T get_prev(std::vector<T>& v, int idx)
     return v[v.size() - 1 - idx];
 }
 
-static double calculate_effeciency(std::vector<double>& v, int period)
+static double calculate_effeciency(std::vector<double>& v, const int period)
 {
     if (period >= v.size()) return -1;
     double sum = 0.0;
@@ -68,6 +68,7 @@ void StrategyEngine::update_regime(const Candle& candle)
 
     double efficiency = calculate_effeciency(close_hist, 10);
     backtest += string_format("efficiency: %lf\n", efficiency);
+    bool impulsetest = (std::abs((candle.close - get_prev(close_hist, 1)))/atr14->getValue()) < 5;
 
     if (ema9->getValue() > ema21->getValue())
     {
@@ -94,7 +95,7 @@ void StrategyEngine::update_regime(const Candle& candle)
         trendscore += 0.20;
         backtest += "ema21 slope > 0.08 trendscore + 20\n";
     }
-    else if (ema9slope < -0.6)
+    else if (ema9slope < -1.0)
     {
         trendscore -= 0.20;
         backtest += "ema21 slope <= 0.08 trendscore - 20\n";
@@ -127,6 +128,12 @@ void StrategyEngine::update_regime(const Candle& candle)
         backtest += "candle <= sma200 trendscore - 10\n";
     }
 
+    if (impulsetest)
+    {
+        trendscore -= 0.20 * std::clamp((ema9->getValue()-ema21->getValue())/atr14->getValue(), -1.0, 1.0);
+        trendscore -= 0.20 * std::clamp((ema9->getValue()-ema50->getValue())/atr14->getValue(), -1.0, 1.0);
+    }
+
     double displacement = candle.close - get_prev(close_hist, 10);
     backtest += string_format("displacement: %lf\n", displacement);
     if (trendscore >= 0.60)
@@ -139,7 +146,7 @@ void StrategyEngine::update_regime(const Candle& candle)
         }
     }
 
-    if (trendscore >= 0.58 && efficiency >= 0.00)
+    if (trendscore >= 0.58 && efficiency >= 0.20)
     {
         if (uptrend_confirm < 2) { uptrend_confirm++; downtrend_confirm=0; }
         else
@@ -162,7 +169,7 @@ void StrategyEngine::update_regime(const Candle& candle)
     }
     else
     {
-        market_state = SIDEWAYS;
+        //market_state = SIDEWAYS;
         uptrend_confirm = 0;
         downtrend_confirm = 0;
     }
@@ -170,10 +177,15 @@ void StrategyEngine::update_regime(const Candle& candle)
     switch (market_state)
     {
     case UPTREND:
-        if (trendscore <= 0.40) market_state = SIDEWAYS;
+        if (trendscore <= 0.40) { market_state = SIDEWAYS; uptrend_confirm = 0; downtrend_confirm = 0; }
         break;
     case DOWNTREND:
-        if (trendscore >= -0.40 || std::abs(trendscore-get_prev<double>(trendscore_hist, 10))/get_prev<double>(trendscore_hist, 10) >= 0.8) market_state = SIDEWAYS;
+        if (trendscore >= -0.40 || std::abs(trendscore-get_prev<double>(trendscore_hist, 10))/get_prev<double>(trendscore_hist, 10) >= 0.8)
+        {
+            market_state = SIDEWAYS;
+            downtrend_confirm = 0;
+            uptrend_confirm = 0;
+        }
         break;
     }
 
@@ -215,7 +227,7 @@ void StrategyEngine::run(const Candle& candle)
     double sma200slope = ((sma200->getValue() - sma200->previous(20))/sma200->previous(20));
     double sma50slope = ((sma50->getValue() - sma50->previous(20))/atr14->getValue());
     double ema50slope = ((ema50->getValue() - ema50->previous(20))/atr14->getValue());
-    double ema21slope = ((ema21->getValue() - ema21->previous(20))/atr14->getValue());
+    double ema21slope = ((ema21->getValue() - ema21->previous(10))/atr14->getValue());
     double candle_range = (highrc->getValue()-lowrc->getValue());
 
     //add a candle range to signal
@@ -232,13 +244,24 @@ void StrategyEngine::run(const Candle& candle)
     switch (market_state)
     {
     case UPTREND:
-        if (position == LONG && candle.close <= long_entry-atr14->getValue()*20)
+        if (position == LONG && candle.close > ema9->getValue() && candle.close > long_entry+atr14->getValue()*2)
         {
             position = FLAT;
-            wallet += candle.close * asset, asset = 0;
+            wallet += candle.close * asset;
             backtest += string_format("exited LONG position at %lf due to stopgap\n", candle.close);
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
             backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
+            asset = 0;
+            break;
+        }
+        if (position == LONG && candle.close <= long_entry-atr14->getValue()*20)
+        {
+            position = FLAT;
+            wallet += candle.close * asset;
+            backtest += string_format("exited LONG position at %lf due to stopgap\n", candle.close);
+            backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
+            backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
+            asset = 0;
             break;
         }
         // strong_uptrend =candle.close > sma200->getValue() && ema21->getValue() > ema50->getValue() && ema50slope > 0.5;
@@ -326,7 +349,7 @@ void StrategyEngine::run(const Candle& candle)
         {
             position = FLAT;
             wallet += candle.close * asset, asset = 0;
-            backtest += string_format("exited LONG position at %lf\n", candle.close);
+            backtest += string_format("exited LONG position at %lf due to downtrend\n", candle.close);
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
             backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
         }
@@ -342,7 +365,12 @@ void StrategyEngine::run(const Candle& candle)
     case SIDEWAYS:
         if (position == LONG)
         {
-            backtest += string_format("exited LONG position at %lf\n", candle.close);
+            if (ema21slope > 0.02)
+            {
+                backtest += string_format("held exiting LONG position due to lagging ema21\n");
+                break;
+            }
+            backtest += string_format("exited LONG position at %lf due to sideways market\n", candle.close);
             wallet += asset * candle.close;
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
             backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
@@ -377,7 +405,7 @@ void StrategyEngine::run(const Candle& candle)
     std::cout << "market state: " << market_state << std::endl;
 	//if(position == LONG) asset = static_cast<int>(wallet/candle.close), wallet -= asset*candle.close;
 	//if(position == SHORT) wallet += candle.close * asset, asset = 0;
-	std::cout << "-----------------------" << std::endl << "backtest run " << runcnt << std::endl;
+	std::cout << "-----------------------------------------" << std::endl << "backtest run " << runcnt << std::endl;
 	std::cout << "position: " << position << std::endl;
 	printf("sma200: %lf\nsma50: %lf\nema200: %lf\nema50: %lf\nrsi14: %lf\n", sma200->getValue(), sma50->getValue(), ema200->getValue(), ema50->getValue(), rsi14->getValue());
     backtest += string_format("close/sma200: %.4f\n"
@@ -410,7 +438,7 @@ void StrategyEngine::run(const Candle& candle)
     std::cout << backtest;
     //if (position == LONG) printf("assets: %lf\ncurrent price: %lf\nwallet: %lf\n", asset, candle.close, wallet);
     //else if (position == SHORT) printf("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
-	std::cout << "-----------------------" << std::endl << std::endl;
+	std::cout << "-----------------------------------------" << std::endl << std::endl;
     //std::cout << ema200->getValue() << std::endl << rsi14->getValue() << std::endl;
 	runcnt++;
 }
