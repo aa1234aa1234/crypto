@@ -4,6 +4,8 @@
 
 #ifndef STRATEGYENGINE_H
 #define STRATEGYENGINE_H
+#include <vector>
+
 #include "Candle.h"
 
 
@@ -14,6 +16,7 @@ class StrategyEngine {
     int runcnt = 1;
     double trendscore = 0.0;
     std::string backtest;
+    std::vector<double> close_hist;
     enum MarketState
     {
         UPTREND,

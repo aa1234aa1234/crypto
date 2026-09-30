@@ -46,7 +46,7 @@ static double calculate_effeciency(std::vector<double>& v, const int period)
 
 void StrategyEngine::update_regime(const Candle& candle)
 {
-    static std::vector<double> trendscore_hist, close_hist;
+    static std::vector<double> trendscore_hist;
     auto sma200 = indicatorsengine->getIndicator<indicators::SMA>({200});
     auto sma50 = indicatorsengine->getIndicator<indicators::SMA>({50});
     auto ema50 = indicatorsengine->getIndicator<indicators::EMA>({50});
@@ -148,7 +148,7 @@ void StrategyEngine::update_regime(const Candle& candle)
 
     if (trendscore >= 0.58 && efficiency >= 0.20)
     {
-        if (uptrend_confirm < 2) { uptrend_confirm++; downtrend_confirm=0; }
+        if (uptrend_confirm < 0) { uptrend_confirm++; downtrend_confirm=0; }
         else
         {
             backtest += string_format("entered UPTREND at backtest number %d\n", runcnt);
@@ -322,16 +322,226 @@ void StrategyEngine::run(const Candle& candle)
                 }
             }
         }
+
+
+
         signal = (
-            std::abs(candle.close - ema9->getValue())/atr14->getValue() <= 0.8 || std::abs(candle.close - ema21->getValue())/atr14->getValue() <= 0.8 &&
+            (std::abs(candle.close - ema9->getValue())/atr14->getValue() <= 0.8 || std::abs(candle.close - ema21->getValue())/atr14->getValue() <= 0.8) &&
             candle.close > ema50->getValue() &&
             // candle.close > candle.open &&
             // is_price_near(lowrc->getValue(), ema50, atr14->getValue()) &&
             // (candle.close - lowrc->getValue()) / atr14->getValue() <= 4.0 &&
             candle.close > ema9->getValue() &&
-            rsi14->getValue() >= 45);
+            ema9->getValue() > ema21->getValue() &&
+            rsi14->getValue() >= 45
+            );
         if (signal && position == FLAT)
         {
+            double disp5 =
+                (candle.close - get_prev(close_hist, 5)) /
+                atr14->getValue();
+
+            double disp10 =
+                (candle.close - get_prev(close_hist, 10)) /
+                atr14->getValue();
+
+            double high_dist =
+                (highrc->getValue() - candle.close) /
+                atr14->getValue();
+            double disp_ratio = 0.0;
+            double price_vs_ema9_slope =
+                    ((candle.close - ema9->getValue()) -
+                     (get_prev(close_hist, 1) - ema9->previous(1))) /
+                    atr14->getValue();
+
+            if (std::abs(disp10) > 0.001)
+                disp_ratio = disp5 / disp10;
+            bool late_entry =
+                ((candle.close - lowrc->getValue()) /
+                (highrc->getValue() - lowrc->getValue())) < 0.50 &&
+        disp_ratio <= 0.0 &&
+        price_vs_ema9_slope < -1.0;
+                        backtest += string_format(
+    "ACTUAL LONG ENTRY: "
+    "close=%.2f "
+    "ema9=%.2f "
+    "ema21=%.2f "
+    "spread=%.3f ATR "
+    "RSI=%.2f "
+    "trendscore=%.3f\n",
+    candle.close,
+    ema9->getValue(),
+    ema21->getValue(),
+    (ema9->getValue() - ema21->getValue()) / atr14->getValue(),
+    rsi14->getValue(),
+    trendscore
+);
+            double range = highrc->getValue() - lowrc->getValue();
+
+            double range_position =
+                range > 0
+                    ? (candle.close - lowrc->getValue()) / range
+                    : 0.0;
+
+            double displacement_5 =
+                (candle.close - get_prev(close_hist, 5)) /
+                atr14->getValue();
+
+            double displacement_10 =
+                (candle.close - get_prev(close_hist, 10)) /
+                atr14->getValue();
+
+            backtest += string_format(
+                "STRUCTURE: range_pos=%.3f "
+                "disp5=%.3f ATR "
+                "disp10=%.3f ATR "
+                "high_dist=%.3f ATR\n",
+                range_position,
+                displacement_5,
+                displacement_10,
+                (highrc->getValue() - candle.close) / atr14->getValue()
+            );
+            double spread0 =
+    (ema9->getValue() - ema21->getValue()) / atr14->getValue();
+
+            double spread1 =
+                (ema9->previous(1) - ema21->previous(1)) / atr14->getValue();
+
+            double spread2 =
+                (ema9->previous(2) - ema21->previous(2)) / atr14->getValue();
+
+            double spread3 =
+                (ema9->previous(3) - ema21->previous(3)) / atr14->getValue();
+            double close_prev = get_prev(close_hist, 1);
+            double close_prev2 = get_prev(close_hist, 2);
+            double close_prev3 = get_prev(close_hist, 3);
+
+            double move1 = (candle.close - close_prev) / atr14->getValue();
+            double move2 = (close_prev - close_prev2) / atr14->getValue();
+            double move3 = (close_prev2 - close_prev3) / atr14->getValue();
+            backtest += string_format(
+    "MOMENTUM_SEQUENCE: "
+    "price1=%.3f price2=%.3f price3=%.3f "
+    "spread0=%.3f spread1=%.3f spread2=%.3f spread3=%.3f\n",
+    move1, move2, move3,
+    spread0, spread1, spread2, spread3
+);
+            double spread_velocity =
+    spread0 - spread1;
+
+            double spread_acceleration =
+                (spread0 - spread1) - (spread1 - spread2);
+
+            backtest += string_format(
+    "SPREAD_DYNAMICS: "
+    "spread=%.3f "
+    "velocity=%.3f "
+    "acceleration=%.3f\n",
+    spread0,
+    spread_velocity,
+    spread_acceleration
+);
+
+            double ema9_slope2 =
+    (ema9->getValue() - ema9->previous(2)) / atr14->getValue();
+
+            double ema9_slope3 =
+                (ema9->getValue() - ema9->previous(3)) / atr14->getValue();
+
+            double ema21_slope2 =
+                (ema21->getValue() - ema21->previous(2)) / atr14->getValue();
+
+
+
+            backtest += string_format(
+    "SHORT_TERM: "
+    "ema9_slope2=%.3f "
+    "ema9_slope3=%.3f "
+    "ema21_slope2=%.3f "
+    "price_vs_ema9_slope=%.3f\n",
+    ema9_slope2,
+    ema9_slope3,
+    ema21_slope2,
+    price_vs_ema9_slope
+);
+            double rel0 =
+    (candle.close - ema9->getValue()) / atr14->getValue();
+
+            double rel1 =
+                (get_prev(close_hist, 1) - ema9->previous(1)) / atr14->getValue();
+
+            double rel2 =
+                (get_prev(close_hist, 2) - ema9->previous(2)) / atr14->getValue();
+
+            double rel3 =
+                (get_prev(close_hist, 3) - ema9->previous(3)) / atr14->getValue();
+
+            double rel_velocity = rel0 - rel1;
+            double rel_acceleration = (rel0 - rel1) - (rel1 - rel2);
+
+            bool relative_turn =
+                rel0 > rel1 && rel1 <= rel2;
+
+            backtest += string_format(
+                "RELATIVE_PRICE: "
+                "rel3=%.3f rel2=%.3f rel1=%.3f rel0=%.3f "
+                "velocity=%.3f acceleration=%.3f "
+                "turn=%d\n",
+                rel3,
+                rel2,
+                rel1,
+                rel0,
+                rel_velocity,
+                rel_acceleration,
+                relative_turn
+            );
+
+
+            bool impulse_deteriorating =
+                disp10 > 5.0 &&
+                disp5 < 0.0 &&
+                high_dist < 2.0;
+
+            backtest += string_format(
+    "IMPULSE: disp5=%.3f disp10=%.3f high_dist=%.3f "
+    "deteriorating=%d\n",
+    disp5,
+    disp10,
+    high_dist,
+    impulse_deteriorating
+);
+
+            double range_pos =
+    (candle.close - lowrc->getValue()) /
+    (highrc->getValue() - lowrc->getValue());
+
+            backtest += string_format(
+    "ENTRY_STRUCTURE: range_pos=%.3f "
+    "disp5=%.3f disp10=%.3f "
+    "high_dist=%.3f\n",
+    range_pos,
+    disp5,
+    disp10,
+    high_dist
+);
+
+
+            backtest += string_format(
+                "IMPULSE_RATIO: disp5=%.3f disp10=%.3f ratio=%.3f "
+                "range_pos=%.3f high_dist=%.3f\n",
+                disp5,
+                disp10,
+                disp_ratio,
+                range_pos,
+                high_dist
+            );
+            bool spread_collapse =
+    spread_velocity < -0.20 &&
+    spread_acceleration < -0.25;
+
+
+
+            if (spread_collapse) break;
             position = LONG;
             long_entry = candle.close;
             asset = static_cast<int>(wallet/candle.close), wallet -= asset*candle.close;
@@ -407,6 +617,19 @@ void StrategyEngine::run(const Candle& candle)
 	//if(position == SHORT) wallet += candle.close * asset, asset = 0;
 	std::cout << "-----------------------------------------" << std::endl << "backtest run " << runcnt << std::endl;
 	std::cout << "position: " << position << std::endl;
+    double distance_from_high =
+    (highrc->getValue() - candle.close) / atr14->getValue();
+
+    double ema_spread =
+        (ema9->getValue() - ema21->getValue()) / atr14->getValue();
+
+    backtest += string_format(
+        "ENTRY: high_dist=%.3f ATR ema_spread=%.3f ATR RSI=%.2f trendscore=%.3f\n",
+        distance_from_high,
+        ema_spread,
+        rsi14->getValue(),
+        trendscore
+    );
 	printf("sma200: %lf\nsma50: %lf\nema200: %lf\nema50: %lf\nrsi14: %lf\n", sma200->getValue(), sma50->getValue(), ema200->getValue(), ema50->getValue(), rsi14->getValue());
     backtest += string_format("close/sma200: %.4f\n"
     "sma50/sma200: %.4f\n"
