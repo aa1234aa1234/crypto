@@ -12,7 +12,7 @@ prev_close = 0
 j = 1
 test = []
 test2 = []
-for i in range(2160):
+for i in range(len(df)):
     if prev_close == df['Close'][i]:
         continue
     test.append(df['Close'][i])

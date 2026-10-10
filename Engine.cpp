@@ -57,7 +57,7 @@ void Engine::run() {
 	if (prices.size() == 0)
 	{
 		CsvReader reader;
-		reader.ReadCsv(prices, "../aa.csv");
+		reader.ReadCsv(prices, "../test.csv");
 		it = prices.begin();
 		//std::reverse(prices.begin(), prices.end());
 	}

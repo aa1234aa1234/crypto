@@ -210,6 +210,7 @@ void StrategyEngine::run(const Candle& candle)
     static double long_entry = 0.0f;
     static int pullback = 0, aboveema = 0, bullish = 0, nearema = 0, rsiok = 0, momentum = 0;
     static int f1=0,f2=0,f3=0,f4=0,f5=0,f6=0;
+    static std::vector<std::pair<int,int>> buys,sells;
     backtest = "";
     auto sma200 = indicatorsengine->getIndicator<indicators::SMA>({200});
     auto sma50 = indicatorsengine->getIndicator<indicators::SMA>({50});
@@ -248,13 +249,14 @@ void StrategyEngine::run(const Candle& candle)
         {
             position = FLAT;
             wallet += candle.close * asset;
-            backtest += string_format("exited LONG position at %lf due to stopgap\n", candle.close);
+            backtest += string_format("exited LONG position at %lf due to profit gap\n", candle.close);
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
             backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
             asset = 0;
+            sells.push_back({runcnt,candle.close});
             break;
         }
-        if (position == LONG && candle.close <= long_entry-atr14->getValue()*20)
+        if (position == LONG && ema21slope < 0 && candle.close <= long_entry-atr14->getValue()*2)
         {
             position = FLAT;
             wallet += candle.close * asset;
@@ -262,6 +264,7 @@ void StrategyEngine::run(const Candle& candle)
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
             backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
             asset = 0;
+            sells.push_back({runcnt,candle.close});
             break;
         }
         // strong_uptrend =candle.close > sma200->getValue() && ema21->getValue() > ema50->getValue() && ema50slope > 0.5;
@@ -541,12 +544,38 @@ void StrategyEngine::run(const Candle& candle)
 
 
 
-            if (spread_collapse) break;
+            //if (spread_collapse) break;
+            double atr = atr14->getValue();
+
+            double extension21 =
+                (candle.close - ema21->getValue()) / atr;
+
+            double spreadVelocity = spread0 - spread1;
+            double spreadAcceleration =
+                spread0 - 2.0 * spread1 + spread2;
+
+            double efficiency = calculate_effeciency(close_hist, 10);
+
+            bool overextended = extension21 > 1.5;
+
+            bool momentumFading =
+                spreadVelocity < -0.05 &&
+                spreadAcceleration < 0.0;
+
+            bool chopAndFading =
+                efficiency >= 0.0 &&
+                efficiency < 0.20 &&
+                spreadVelocity < 0.0;
+
+            bool blockLongEntry =
+                overextended;
+            if (blockLongEntry) break;
             position = LONG;
             long_entry = candle.close;
             asset = static_cast<int>(wallet/candle.close), wallet -= asset*candle.close;
             backtest += string_format("entered LONG position at: %lf with %lf assets\n", candle.close, asset);
             backtest += string_format("assets: %lf\nbought at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
+            buys.push_back({runcnt,candle.close});
         }
         break;
     case DOWNTREND:
@@ -584,7 +613,7 @@ void StrategyEngine::run(const Candle& candle)
             wallet += asset * candle.close;
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
             backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
-
+            sells.push_back({runcnt,candle.close});
             asset = 0;
         }
         else if (position == SHORT)
@@ -664,4 +693,28 @@ void StrategyEngine::run(const Candle& candle)
 	std::cout << "-----------------------------------------" << std::endl << std::endl;
     //std::cout << ema200->getValue() << std::endl << rsi14->getValue() << std::endl;
 	runcnt++;
+    std::string buylog="buylogx=[",selllog="selllogx=[", buylogval="buylogy=[", selllogval="selllogy=[";
+    for (int i = 0; i<buys.size(); i++)
+    {
+        buylog += string_format("%d", buys[i].first);
+        buylogval += string_format("%d", buys[i].second);
+        if (i != buys.size()-1)
+        {
+            buylog += ",";
+            buylogval += ",";
+        }
+    }
+    for (int i = 0; i<sells.size(); i++)
+    {
+        selllog += string_format("%d", sells[i].first);
+        selllogval += string_format("%d", sells[i].second);
+        if (i != sells.size()-1)
+        {
+            selllog += ",";
+            selllogval += ",";
+        }
+    }
+    buylog += ']', selllog += ']', buylogval += ']', selllogval += ']';
+    std::cout << buylog << std::endl << buylogval << std::endl;
+    std::cout << selllog << std::endl << selllogval << std::endl;
 }
