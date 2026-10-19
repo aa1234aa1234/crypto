@@ -48,6 +48,8 @@ template indicators::EMA* IndicatorsEngine::getIndicator<indicators::EMA>(std::v
 template indicators::RSI* IndicatorsEngine::getIndicator<indicators::RSI>(std::vector<int> params);
 template indicators::RC<LOW>* IndicatorsEngine::getIndicator<indicators::RC<LOW>>(std::vector<int> params);
 template indicators::RC<HIGH>* IndicatorsEngine::getIndicator<indicators::RC<HIGH>>(std::vector<int> params);
+template indicators::HLRC<LOW>* IndicatorsEngine::getIndicator<indicators::HLRC<LOW>>(std::vector<int> params);
+template indicators::HLRC<HIGH>* IndicatorsEngine::getIndicator<indicators::HLRC<HIGH>>(std::vector<int> params);
 template indicators::ATR* IndicatorsEngine::getIndicator<indicators::ATR>(std::vector<int> params);
 
 

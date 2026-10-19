@@ -229,6 +229,7 @@ void StrategyEngine::run(const Candle& candle)
     double sma50slope = ((sma50->getValue() - sma50->previous(20))/atr14->getValue());
     double ema50slope = ((ema50->getValue() - ema50->previous(20))/atr14->getValue());
     double ema21slope = ((ema21->getValue() - ema21->previous(10))/atr14->getValue());
+    double ema9slope = ((ema9->getValue() - ema9->previous(5))/atr14->getValue());
     double candle_range = (highrc->getValue()-lowrc->getValue());
 
     //add a candle range to signal
@@ -604,7 +605,7 @@ void StrategyEngine::run(const Candle& candle)
     case SIDEWAYS:
         if (position == LONG)
         {
-            if (ema21slope > 0.02)
+            if (ema9slope > 0.2 && ema21slope > 0.02)
             {
                 backtest += string_format("held exiting LONG position due to lagging ema21\n");
                 break;

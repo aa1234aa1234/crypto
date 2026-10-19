@@ -239,6 +239,56 @@ namespace indicators {
 		IndicatorType getType() override { return type; }
 	};
 
+	template<int atr_period>
+	class HLRC : public Indicator
+	{
+		IndicatorType type{std::type_index(typeid(HLRC))};
+		int count = 0;
+		double high=-1e9,low=1e9;
+		indicators::ATR<atr_period>* atr;
+		bool tracking_high;
+	public:
+		HLRC(int period, ATR* atr) : atr(atr)
+		{
+			type.periods = {atr_period};
+		}
+		~HLRC() = default;
+		void recalculate(const Candle& candle) override
+		{
+			if (count < atr_period)
+			{
+				count++;
+				return;
+			}
+			if (tracking_high)
+			{
+				if (candle.high > high) high = candle.high;
+				else if (candle.close < high - (atr->getValue() * 1.5))
+				{
+					value_history.push_back(high);
+					low = candle.low;
+					tracking_high = false;
+				}
+			}
+			else
+			{
+				if (candle.low < low) low = candle.low;
+				else if (candle.close > low + (atr->getValue() * 1.5))
+				{
+					value_history.push_back(low);
+					high = candle.high;
+					tracking_high = true;
+				}
+			}
+
+		}
+
+		double getValue() override { return tracking_high ? high : low; }
+
+		std::string getTypeId() override { return typeid(HLRC).name(); }
+		IndicatorType getType() override { return type; }
+	};
+
 	class RSI : public Indicator
 	{
 		IndicatorType type{std::type_index(typeid(RSI))};
