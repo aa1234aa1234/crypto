@@ -30,6 +30,7 @@ Engine::Engine() {
 	indicatorsEngine->addIndicator(new indicators::RC<LOW>(258000));
 	indicatorsEngine->addIndicator(new indicators::RC<HIGH>(258000));
 	indicatorsEngine->addIndicator(new indicators::ATR(14,indicatorsEngine->getIndicator<indicators::RC<LOW>>({})));
+	indicatorsEngine->addIndicator(new indicators::HLRC<14>(indicatorsEngine->getIndicator<indicators::ATR>({14})));
 }
 
 Engine::~Engine() {

@@ -245,10 +245,10 @@ namespace indicators {
 		IndicatorType type{std::type_index(typeid(HLRC))};
 		int count = 0;
 		double high=-1e9,low=1e9;
-		indicators::ATR<atr_period>* atr;
+		indicators::ATR* atr;
 		bool tracking_high;
 	public:
-		HLRC(int period, ATR* atr) : atr(atr)
+		HLRC(ATR* atr) : atr(atr)
 		{
 			type.periods = {atr_period};
 		}
@@ -284,6 +284,7 @@ namespace indicators {
 		}
 
 		double getValue() override { return tracking_high ? high : low; }
+		bool is_tracking_high() { return tracking_high; }
 
 		std::string getTypeId() override { return typeid(HLRC).name(); }
 		IndicatorType getType() override { return type; }
