@@ -222,6 +222,7 @@ void StrategyEngine::run(const Candle& candle)
     auto atr14 = indicatorsengine->getIndicator<indicators::ATR>({14});
     auto lowrc = indicatorsengine->getIndicator<indicators::RC<LOW>>({});
     auto highrc = indicatorsengine->getIndicator<indicators::RC<HIGH>>({});
+    auto hlrc = indicatorsengine->getIndicator<indicators::HLRC<14>>({14});
 
     update_regime(candle);
 
@@ -339,7 +340,7 @@ void StrategyEngine::run(const Candle& candle)
             ema9->getValue() > ema21->getValue() &&
             rsi14->getValue() >= 45
             );
-        if (signal && position == FLAT)
+        if (!hlrc->is_tracking_high() && position == FLAT)
         {
             double disp5 =
                 (candle.close - get_prev(close_hist, 5)) /
@@ -629,6 +630,7 @@ void StrategyEngine::run(const Candle& candle)
     }
     backtest += string_format("f1: %d\nf2: %d\nf3: %d\nf4: %d\nf5: %d\nf6: %d\n",f1,f2,f3,f4,f5,f6);
     backtest += string_format("pullback distance: %lf ATR\n", std::abs(lowrc->getValue() - ema50->getValue()) / atr14->getValue());
+    backtest += string_format("is tracking high: %d\n", hlrc->is_tracking_high());
     backtest += string_format(
     "LONG: pullback=%d above_ema=%d\nbullish=%d\nnear_ema=%d\n"
     "rsi=%d\nmomentum=%d\nsignal=%d\n",

@@ -246,7 +246,7 @@ namespace indicators {
 		int count = 0;
 		double high=-1e9,low=1e9;
 		indicators::ATR* atr;
-		bool tracking_high;
+		bool tracking_high=true;
 	public:
 		HLRC(ATR* atr) : atr(atr)
 		{

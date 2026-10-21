@@ -13,8 +13,8 @@ Engine::Engine() {
 	indicatorsEngine = new IndicatorsEngine();
 	backTester = new BackTester(indicatorsEngine);
 	strategyEngine = new StrategyEngine(indicatorsEngine);
-	curlClient = new CurlClient();
-	curlClient->renew_access_code();
+	//curlClient = new CurlClient();
+	//curlClient->renew_access_code();
 
 	indicatorsEngine->addIndicator(new indicators::SMA(200));
 	indicatorsEngine->addIndicator(new indicators::SMA(50));
@@ -37,6 +37,7 @@ Engine::~Engine() {
 	if(backTester) delete backTester;
 	if (indicatorsEngine) delete indicatorsEngine;
 	if (strategyEngine) delete strategyEngine;
+	if (curlClient) delete curlClient;
 }
 
 std::vector<Candle>& Engine::getCandles() { return candles; }
