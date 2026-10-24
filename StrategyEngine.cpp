@@ -145,8 +145,9 @@ void StrategyEngine::update_regime(const Candle& candle)
             if (displacement > atr14->getValue()) backtest += string_format("displacement > atr\n");
         }
     }
+    //if (candle.close > ema9->getValue() && ema9->getValue() > ema21->getValue() && ema21->getValue() > ema50->getValue()) trendscore += 1.5;
 
-    if (trendscore >= 0.58 && efficiency >= 0.20)
+    if (trendscore >= 0.58 && efficiency >= 0.00)
     {
         if (uptrend_confirm < 0) { uptrend_confirm++; downtrend_confirm=0; }
         else
@@ -210,6 +211,7 @@ void StrategyEngine::run(const Candle& candle)
     static double long_entry = 0.0f;
     static int pullback = 0, aboveema = 0, bullish = 0, nearema = 0, rsiok = 0, momentum = 0;
     static int f1=0,f2=0,f3=0,f4=0,f5=0,f6=0;
+    static double lasthigh=0;
     static std::vector<std::pair<int,int>> buys,sells;
     backtest = "";
     auto sma200 = indicatorsengine->getIndicator<indicators::SMA>({200});
@@ -247,7 +249,19 @@ void StrategyEngine::run(const Candle& candle)
     switch (market_state)
     {
     case UPTREND:
-        if (position == LONG && candle.close > ema9->getValue() && candle.close > long_entry+atr14->getValue()*2)
+
+        // if (position == LONG && candle.close > ema9->getValue())
+        // {
+        //     position = FLAT;
+        //     wallet += candle.close * asset;
+        //     backtest += string_format("exited LONG position at %lf due to profit gap\n", candle.close);
+        //     backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
+        //     backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
+        //     asset = 0;
+        //     sells.push_back({runcnt,candle.close});
+        //     break;
+        // }
+        if (position == LONG && hlrc->is_tracking_high() && candle.close < hlrc->getValue())
         {
             position = FLAT;
             wallet += candle.close * asset;
@@ -258,6 +272,7 @@ void StrategyEngine::run(const Candle& candle)
             sells.push_back({runcnt,candle.close});
             break;
         }
+
         if (position == LONG && ema21slope < 0 && candle.close <= long_entry-atr14->getValue()*2)
         {
             position = FLAT;
@@ -331,16 +346,17 @@ void StrategyEngine::run(const Candle& candle)
 
 
         signal = (
-            (std::abs(candle.close - ema9->getValue())/atr14->getValue() <= 0.8 || std::abs(candle.close - ema21->getValue())/atr14->getValue() <= 0.8) &&
+            //(std::abs(candle.close - ema9->getValue())/atr14->getValue() <= 0.8 || std::abs(candle.close - ema21->getValue())/atr14->getValue() <= 0.8) &&
             candle.close > ema50->getValue() &&
             // candle.close > candle.open &&
             // is_price_near(lowrc->getValue(), ema50, atr14->getValue()) &&
             // (candle.close - lowrc->getValue()) / atr14->getValue() <= 4.0 &&
             candle.close > ema9->getValue() &&
             ema9->getValue() > ema21->getValue() &&
+            ema21->getValue() > ema50->getValue() &&
             rsi14->getValue() >= 45
             );
-        if (!hlrc->is_tracking_high() && position == FLAT)
+        if ((signal && hlrc->is_tracking_high()) && position == FLAT)
         {
             double disp5 =
                 (candle.close - get_prev(close_hist, 5)) /
@@ -579,6 +595,7 @@ void StrategyEngine::run(const Candle& candle)
             backtest += string_format("assets: %lf\nbought at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
             buys.push_back({runcnt,candle.close});
         }
+        if (hlrc->is_tracking_high()) lasthigh = hlrc->getValue();
         break;
     case DOWNTREND:
         signal = (
@@ -616,6 +633,7 @@ void StrategyEngine::run(const Candle& candle)
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
             backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
             sells.push_back({runcnt,candle.close});
+
             asset = 0;
         }
         else if (position == SHORT)

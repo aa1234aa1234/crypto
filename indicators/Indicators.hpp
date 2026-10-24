@@ -263,7 +263,7 @@ namespace indicators {
 			if (tracking_high)
 			{
 				if (candle.high > high) high = candle.high;
-				else if (candle.close < high - (atr->getValue() * 1.5))
+				else if (candle.close < high - (atr->getValue() * 2))
 				{
 					value_history.push_back(high);
 					low = candle.low;
@@ -273,7 +273,7 @@ namespace indicators {
 			else
 			{
 				if (candle.low < low) low = candle.low;
-				else if (candle.close > low + (atr->getValue() * 1.5))
+				else if (candle.close > low + (atr->getValue() * 2))
 				{
 					value_history.push_back(low);
 					high = candle.high;
