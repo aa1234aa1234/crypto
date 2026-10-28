@@ -145,7 +145,7 @@ void StrategyEngine::update_regime(const Candle& candle)
             if (displacement > atr14->getValue()) backtest += string_format("displacement > atr\n");
         }
     }
-    //if (candle.close > ema9->getValue() && ema9->getValue() > ema21->getValue() && ema21->getValue() > ema50->getValue()) trendscore += 1.5;
+    if (candle.close > ema9->getValue() && ema9->getValue() > ema21->getValue() && ema21->getValue() > ema50->getValue()) trendscore += 1.5;
 
     if (trendscore >= 0.58 && efficiency >= 0.00)
     {
@@ -212,6 +212,7 @@ void StrategyEngine::run(const Candle& candle)
     static int pullback = 0, aboveema = 0, bullish = 0, nearema = 0, rsiok = 0, momentum = 0;
     static int f1=0,f2=0,f3=0,f4=0,f5=0,f6=0;
     static double lasthigh=0;
+    static double positiveprofit=0., negativeprofit=0.;
     static std::vector<std::pair<int,int>> buys,sells;
     backtest = "";
     auto sma200 = indicatorsengine->getIndicator<indicators::SMA>({200});
@@ -261,13 +262,15 @@ void StrategyEngine::run(const Candle& candle)
         //     sells.push_back({runcnt,candle.close});
         //     break;
         // }
-        if (position == LONG && hlrc->is_tracking_high() && candle.close < hlrc->getValue())
+        if (position == LONG && hlrc->is_tracking_high() && candle.close == hlrc->getValue())
         {
             position = FLAT;
             wallet += candle.close * asset;
             backtest += string_format("exited LONG position at %lf due to profit gap\n", candle.close);
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
             backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
+            if ((candle.close-long_entry) < 0) negativeprofit += candle.close-long_entry;
+            else positiveprofit += candle.close-long_entry;
             asset = 0;
             sells.push_back({runcnt,candle.close});
             break;
@@ -280,6 +283,8 @@ void StrategyEngine::run(const Candle& candle)
             backtest += string_format("exited LONG position at %lf due to stopgap\n", candle.close);
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
             backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
+            if ((candle.close-long_entry) < 0) negativeprofit += candle.close-long_entry;
+            else positiveprofit += candle.close-long_entry;
             asset = 0;
             sells.push_back({runcnt,candle.close});
             break;
@@ -595,7 +600,7 @@ void StrategyEngine::run(const Candle& candle)
             backtest += string_format("assets: %lf\nbought at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
             buys.push_back({runcnt,candle.close});
         }
-        if (hlrc->is_tracking_high()) lasthigh = hlrc->getValue();
+        lasthigh = hlrc->is_tracking_high();
         break;
     case DOWNTREND:
         signal = (
@@ -610,6 +615,8 @@ void StrategyEngine::run(const Candle& candle)
             backtest += string_format("exited LONG position at %lf due to downtrend\n", candle.close);
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
             backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
+            if ((candle.close-long_entry) < 0) negativeprofit += candle.close-long_entry;
+            else positiveprofit += candle.close-long_entry;
         }
         if (position == FLAT && signal)
         {
@@ -623,7 +630,7 @@ void StrategyEngine::run(const Candle& candle)
     case SIDEWAYS:
         if (position == LONG)
         {
-            if (ema9slope > 0.2 && ema21slope > 0.02)
+            if (ema9slope > 0 || ema21slope > 0)
             {
                 backtest += string_format("held exiting LONG position due to lagging ema21\n");
                 break;
@@ -632,6 +639,8 @@ void StrategyEngine::run(const Candle& candle)
             wallet += asset * candle.close;
             backtest += string_format("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
             backtest += string_format("profit margin: %lf\n", candle.close-long_entry);
+            if ((candle.close-long_entry) < 0) negativeprofit += candle.close-long_entry;
+            else positiveprofit += candle.close-long_entry;
             sells.push_back({runcnt,candle.close});
 
             asset = 0;
@@ -711,6 +720,7 @@ void StrategyEngine::run(const Candle& candle)
     std::cout << backtest;
     //if (position == LONG) printf("assets: %lf\ncurrent price: %lf\nwallet: %lf\n", asset, candle.close, wallet);
     //else if (position == SHORT) printf("assets: %lf\nsold at: %lf\nwallet: %lf\n", asset, candle.close, wallet);
+    std::cout << string_format("negative profit: %lf\npositive profit: %lf\n", negativeprofit, positiveprofit);
 	std::cout << "-----------------------------------------" << std::endl << std::endl;
     //std::cout << ema200->getValue() << std::endl << rsi14->getValue() << std::endl;
 	runcnt++;
