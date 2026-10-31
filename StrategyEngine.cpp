@@ -262,7 +262,7 @@ void StrategyEngine::run(const Candle& candle)
         //     sells.push_back({runcnt,candle.close});
         //     break;
         // }
-        if (position == LONG && hlrc->is_tracking_high() && candle.close == hlrc->getValue())
+        if (position == LONG && hlrc->is_tracking_high() && candle.close == hlrc->getValue() && (((ema9->previous() - ema9->previous(6))/atr14->getValue()) < ema9slope))
         {
             position = FLAT;
             wallet += candle.close * asset;
@@ -351,7 +351,7 @@ void StrategyEngine::run(const Candle& candle)
 
 
         signal = (
-            //(std::abs(candle.close - ema9->getValue())/atr14->getValue() <= 0.8 || std::abs(candle.close - ema21->getValue())/atr14->getValue() <= 0.8) &&
+            (std::abs(candle.close - ema9->getValue())/atr14->getValue() <= 0.8 || std::abs(candle.close - ema21->getValue())/atr14->getValue() <= 0.8) &&
             candle.close > ema50->getValue() &&
             // candle.close > candle.open &&
             // is_price_near(lowrc->getValue(), ema50, atr14->getValue()) &&
@@ -592,7 +592,7 @@ void StrategyEngine::run(const Candle& candle)
 
             bool blockLongEntry =
                 overextended;
-            if (blockLongEntry) break;
+            //if (blockLongEntry) break;
             position = LONG;
             long_entry = candle.close;
             asset = static_cast<int>(wallet/candle.close), wallet -= asset*candle.close;
@@ -702,6 +702,7 @@ void StrategyEngine::run(const Candle& candle)
     "atr14: %lf\n"
     "candle range: %.4f\n"
     "ema21 value: %lf\n"
+    "ema9 slope: %lf\n"
     "wallet: %lf\n",
 
     candle.close / sma200->getValue(),
@@ -716,6 +717,7 @@ void StrategyEngine::run(const Candle& candle)
     atr14->getValue(),
     candle_range,
     ema21->getValue(),
+    ema9slope,
     wallet);
     std::cout << backtest;
     //if (position == LONG) printf("assets: %lf\ncurrent price: %lf\nwallet: %lf\n", asset, candle.close, wallet);
