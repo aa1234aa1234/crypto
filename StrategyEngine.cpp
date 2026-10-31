@@ -246,6 +246,9 @@ void StrategyEngine::run(const Candle& candle)
 
     int signal = false;
     bool pullbackc, above_ema, bullishc, near_ema, rsi_ok, momentumc;
+    double highest_since_entry = 0.0;
+    double trailing_stop = 0.0;
+    double atr_at_peak = 0.0;
 
     switch (market_state)
     {
@@ -262,7 +265,7 @@ void StrategyEngine::run(const Candle& candle)
         //     sells.push_back({runcnt,candle.close});
         //     break;
         // }
-        if (position == LONG && hlrc->is_tracking_high() && candle.close == hlrc->getValue() && (((ema9->previous() - ema9->previous(6))/atr14->getValue()) < ema9slope))
+        if (position == LONG && hlrc->is_tracking_high() && (((ema9->previous() - ema9->previous(6))/atr14->getValue()) < ema9slope))
         {
             position = FLAT;
             wallet += candle.close * asset;
@@ -289,6 +292,7 @@ void StrategyEngine::run(const Candle& candle)
             sells.push_back({runcnt,candle.close});
             break;
         }
+
         // strong_uptrend =candle.close > sma200->getValue() && ema21->getValue() > ema50->getValue() && ema50slope > 0.5;
         //
         // pullback = lowrc->getValue() <= ema50->getValue() + 0.5 * atr14->getValue();
@@ -363,6 +367,9 @@ void StrategyEngine::run(const Candle& candle)
             );
         if ((signal && hlrc->is_tracking_high()) && position == FLAT)
         {
+            highest_since_entry = candle.close;
+            trailing_stop = 0.0;
+            atr_at_peak = atr14->getValue();
             double disp5 =
                 (candle.close - get_prev(close_hist, 5)) /
                 atr14->getValue();
