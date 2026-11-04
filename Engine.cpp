@@ -13,8 +13,8 @@ Engine::Engine() {
 	indicatorsEngine = new IndicatorsEngine();
 	backTester = new BackTester(indicatorsEngine);
 	strategyEngine = new StrategyEngine(indicatorsEngine);
-	//curlClient = new CurlClient();
-	//curlClient->renew_access_code();
+	curlClient = new CurlClient();
+	curlClient->renew_access_code();
 
 	indicatorsEngine->addIndicator(new indicators::SMA(200));
 	indicatorsEngine->addIndicator(new indicators::SMA(50));
@@ -27,8 +27,10 @@ Engine::Engine() {
 	indicatorsEngine->addIndicator(new indicators::RSI(14));
 	//indicatorsEngine->addIndicator(new indicators::RC<LOW>(curlClient->getCurrentPrice("AAPL", "ND").low_price));
 	//indicatorsEngine->addIndicator(new indicators::RC<HIGH>(curlClient->getCurrentPrice("AAPL", "ND").low_price));
-	indicatorsEngine->addIndicator(new indicators::RC<LOW>(258000));
-	indicatorsEngine->addIndicator(new indicators::RC<HIGH>(258000));
+	indicatorsEngine->addIndicator(new indicators::RC<LOW>(curlClient->getCurrentPrice("005930").low_price));
+	indicatorsEngine->addIndicator(new indicators::RC<HIGH>(curlClient->getCurrentPrice("005930").low_price));
+	//indicatorsEngine->addIndicator(new indicators::RC<LOW>(258000));
+	//indicatorsEngine->addIndicator(new indicators::RC<HIGH>(258000));
 	indicatorsEngine->addIndicator(new indicators::ATR(14,indicatorsEngine->getIndicator<indicators::RC<LOW>>({})));
 	indicatorsEngine->addIndicator(new indicators::HLRC<14>(indicatorsEngine->getIndicator<indicators::ATR>({14})));
 }
@@ -56,23 +58,26 @@ void Engine::run() {
 	static double prev_price = 0;
 	static std::vector<Candle>::iterator it;
 	static std::vector<Candle> prices;
-	if (prices.size() == 0)
-	{
-		CsvReader reader;
-		reader.ReadCsv(prices, "../test.csv");
-		it = prices.begin();
-		//std::reverse(prices.begin(), prices.end());
-	}
+	// if (prices.size() == 0)
+	// {
+	// 	CsvReader reader;
+	// 	reader.ReadCsv(prices, "../test.csv");
+	// 	it = prices.begin();
+	// 	//std::reverse(prices.begin(), prices.end());
+	// }
 	//auto ca = curlClient->getCurrentPrice("005930");
-	//Candle candle = curlClient->getCurrentPrice("AAPL", "ND").to_candle();
-	Candle candle = *it; ++it;
+	Candle candle = curlClient->getCurrentPrice("005930").to_candle();
+	//Candle candle = *it; ++it;
 	candle.normalize();
-	if (candle.close == prev_price) { return; }
+	if (candle.close == prev_price) {
+		std::cout << "skipped due to no price change\n" << std::endl;
+		return;
+	}
 	indicatorsEngine->update(candle);
 	strategyEngine->run(candle);
 	prev_price = candle.close;
 	std::cout << candle.close << std::endl;
-	if (it == prices.end()-1)
-		Application::isRunning = false;
+	// if (it == prices.end()-1)
+	// 	Application::isRunning = false;
 	//backTester->run(prices, candles);
 }

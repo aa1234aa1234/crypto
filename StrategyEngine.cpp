@@ -265,7 +265,7 @@ void StrategyEngine::run(const Candle& candle)
         //     sells.push_back({runcnt,candle.close});
         //     break;
         // }
-        if (position == LONG && hlrc->is_tracking_high() && (((ema9->previous() - ema9->previous(6))/atr14->getValue()) < ema9slope))
+        if (position == LONG && hlrc->is_tracking_high() && candle.close == hlrc->getValue() && (((ema9->previous() - ema9->previous(6))/atr14->getValue()) < ema9slope))
         {
             position = FLAT;
             wallet += candle.close * asset;
