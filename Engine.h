@@ -7,6 +7,7 @@ class BackTester;
 class IndicatorsEngine;
 class StrategyEngine;
 class CurlClient;
+class graph_generator;
 
 class Engine {
 	std::vector<Candle> candles;
@@ -14,6 +15,7 @@ class Engine {
 	IndicatorsEngine* indicatorsEngine;
 	StrategyEngine* strategyEngine;
 	CurlClient* curlClient;
+	graph_generator* graphGenerator;
 public:
 	Engine();
 	~Engine();

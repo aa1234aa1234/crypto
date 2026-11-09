@@ -9,6 +9,7 @@ file(GLOB SOURCES
 		"${CMAKE_CURRENT_SOURCE_DIR}/indicators/*.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/curl/*.hpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/curl/*.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/resources/*.cpp"
 )
 
 include_directories(thirdparty/curl/include)

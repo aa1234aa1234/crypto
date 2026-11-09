@@ -39,6 +39,7 @@ public:
     ~StrategyEngine();
 
     void run(const Candle& candle);
+    std::string export_transaction(std::string log=""); //will need to revise this at one point
 };
 
 

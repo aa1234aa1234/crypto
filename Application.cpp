@@ -12,7 +12,8 @@ bool Application::isRunning = false;
 Application::Application()
 {
 	engine = new Engine();
-	csvReader.ReadCsv(engine->getCandles(), "../a.csv");
+	csvReader.ReadCsv(engine->getCandles(), "../resources/historical_data/a.csv");
+	//csvReader.ReadCsv(engine->getCandles(), "../a.csv");
 	engine->initialize();
 }
 

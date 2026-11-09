@@ -7,12 +7,14 @@
 #include "curl/CurlClient.h"
 #include <regex>
 #include <algorithm>
+#include "resources/graph_generator.h"
 
 
 Engine::Engine() {
 	indicatorsEngine = new IndicatorsEngine();
 	backTester = new BackTester(indicatorsEngine);
 	strategyEngine = new StrategyEngine(indicatorsEngine);
+	graphGenerator = new graph_generator(indicatorsEngine);
 	curlClient = new CurlClient();
 	curlClient->renew_access_code();
 
@@ -77,7 +79,7 @@ void Engine::run() {
 	strategyEngine->run(candle);
 	prev_price = candle.close;
 	std::cout << candle.close << std::endl;
-	// if (it == prices.end()-1)
+	//if (it == prices.end()-1)
 	// 	Application::isRunning = false;
 	//backTester->run(prices, candles);
 }

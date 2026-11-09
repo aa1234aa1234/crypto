@@ -363,7 +363,7 @@ void StrategyEngine::run(const Candle& candle)
             candle.close > ema9->getValue() &&
             ema9->getValue() > ema21->getValue() &&
             ema21->getValue() > ema50->getValue() &&
-            rsi14->getValue() >= 45
+            rsi14->getValue() >= 40
             );
         if ((signal && hlrc->is_tracking_high()) && position == FLAT)
         {
@@ -757,4 +757,11 @@ void StrategyEngine::run(const Candle& candle)
     buylog += ']', selllog += ']', buylogval += ']', selllogval += ']';
     std::cout << buylog << std::endl << buylogval << std::endl;
     std::cout << selllog << std::endl << selllogval << std::endl;
+    export_transaction(buylog+"\n"+selllog+"\n"+buylogval+"\n"+selllogval+"\n");
+}
+
+std::string StrategyEngine::export_transaction(std::string log) {
+    static std::string transactionlog;
+    if (log != "") transactionlog = log;
+    return transactionlog;
 }
