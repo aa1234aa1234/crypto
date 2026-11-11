@@ -26,8 +26,9 @@ class StrategyEngine {
 
     IndicatorsEngine* indicatorsengine;
 
-    void update_regime(const Candle& candle);
+
 public:
+    void update_regime(const Candle& candle);
     enum Position
     {
         FLAT=0,

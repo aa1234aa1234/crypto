@@ -51,6 +51,7 @@ void Engine::initialize()
 	std::vector<double> prices;
 	for(auto& p : candles) {
 		indicatorsEngine->update(p);
+		if (prices.size() > 200) strategyEngine->update_regime(p);
 		prices.push_back(p.close);
 	}
 }
