@@ -61,16 +61,16 @@ void Engine::run() {
 	static double prev_price = 0;
 	static std::vector<Candle>::iterator it;
 	static std::vector<Candle> prices;
-	// if (prices.size() == 0)
-	// {
-	// 	CsvReader reader;
-	// 	reader.ReadCsv(prices, "../test.csv");
-	// 	it = prices.begin();
-	// 	//std::reverse(prices.begin(), prices.end());
-	// }
+	if (prices.size() == 0)
+	{
+		CsvReader reader;
+		reader.ReadCsv(prices, "../resources/historical_data/a.csv");
+		it = prices.begin();
+		//std::reverse(prices.begin(), prices.end());
+	}
 	//auto ca = curlClient->getCurrentPrice("005930");
-	Candle candle = curlClient->getCurrentPrice("005930").to_candle();
-	//Candle candle = *it; ++it;
+	//Candle candle = curlClient->getCurrentPrice("005930").to_candle();
+	Candle candle = *it; ++it;
 	candle.normalize();
 	if (candle.close == prev_price) {
 		std::cout << "skipped due to no price change\n" << std::endl;
@@ -80,7 +80,7 @@ void Engine::run() {
 	strategyEngine->run(candle);
 	prev_price = candle.close;
 	std::cout << candle.close << std::endl;
-	//if (it == prices.end()-1)
-	// 	Application::isRunning = false;
+	if (it == prices.end()-1)
+	 	Application::isRunning = false;
 	//backTester->run(prices, candles);
 }
